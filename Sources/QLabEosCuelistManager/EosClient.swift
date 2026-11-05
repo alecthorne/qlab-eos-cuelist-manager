@@ -34,6 +34,8 @@ final class EosClient: ObservableObject {
     /// Cues (and cue parts) in `cueList`, in list order.
     @Published private(set) var cues: [EosCue] = []
     @Published private(set) var isLoadingCues = false
+    /// True once the chosen cue list has been read completely at least once.
+    @Published private(set) var cuesLoaded = false
     @Published private(set) var activeCue: EosCueRef?
     @Published private(set) var activeCueText = ""
     @Published private(set) var pendingCueText = ""
@@ -151,6 +153,7 @@ final class EosClient: ObservableObject {
         connection = nil
         status = .error(reason)
         isLoadingCues = false
+        cuesLoaded = false
         scheduleReconnect()
     }
 
@@ -199,6 +202,7 @@ final class EosClient: ObservableObject {
             if count == 0 {
                 cues = []
                 isLoadingCues = false
+                cuesLoaded = true
             } else {
                 for index in 0..<count {
                     connection?.send(EosRequest.cue(list: list, index: index))
@@ -210,6 +214,7 @@ final class EosClient: ObservableObject {
             if fetchedCues.count >= expectedCueCount {
                 cues = fetchedCues.values.sorted { $0.index < $1.index }
                 isLoadingCues = false
+                cuesLoaded = true
             }
         case .activeCue(let list, let number, _):
             activeCue = EosCueRef(list: list, number: number)
@@ -235,5 +240,6 @@ final class EosClient: ObservableObject {
         fetchedCues = [:]
         expectedCueCount = 0
         isLoadingCues = false
+        cuesLoaded = false
     }
 }
