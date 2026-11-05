@@ -13,6 +13,7 @@ struct ContentView: View {
         case compare = "Compare"
         case eos = "Eos cue list"
         case qlab = "QLab cues"
+        case actions = "Action log"
         var id: String { rawValue }
     }
 
@@ -36,7 +37,7 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 420)
+            .frame(maxWidth: 520)
             .padding(.vertical, 8)
 
             Group {
@@ -44,6 +45,7 @@ struct ContentView: View {
                 case .compare: ComparisonPane()
                 case .eos: EosCuesPane()
                 case .qlab: QLabCuesPane()
+                case .actions: ActionLogPane()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -77,7 +79,7 @@ struct ContentView: View {
                 }
                 .padding()
             }
-            .frame(width: 560, height: 600)
+            .frame(width: 580, height: 720)
         }
         .onAppear {
             model.startIfNeeded()

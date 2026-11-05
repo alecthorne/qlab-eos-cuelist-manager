@@ -8,6 +8,11 @@ final class AppModel: ObservableObject {
     let interfaces: NetworkInterfaceMonitor
     let qlab: QLabClient
     let eos: EosClient
+    let actionLog = ActionLog()
+    private(set) lazy var changes = ChangeController(
+        actionLog: actionLog, settings: settings, eos: eos,
+        currentChanges: { [weak self] in self?.plannedChanges }
+    )
 
     private var started = false
 
@@ -50,5 +55,33 @@ final class AppModel: ObservableObject {
     /// Every numbered cue in the chosen QLab cue list: the source of truth.
     var qlabNumberedCues: [QLabCue] {
         selectedQLabCueList?.numberedDescendants() ?? []
+    }
+
+    /// Why QLab and Eos can't be compared yet, or nil when both sides are loaded.
+    /// Comparing early would flag every cue, so the UI shows this instead.
+    var comparisonNotReadyReason: String? {
+        if settings.eosCueList == nil { return "Choose the Eos cue list to sync in Settings." }
+        if selectedQLabCueList == nil {
+            return qlab.status == .connected
+                ? "Choose the QLab cue list to use in Settings."
+                : "Waiting for QLab."
+        }
+        if eos.status != .connected { return "Waiting for Eos." }
+        if !eos.cuesLoaded || eos.cueList != settings.eosCueList {
+            return "Reading Eos cue list \(settings.eosCueList ?? 0)…"
+        }
+        return nil
+    }
+
+    /// QLab and Eos cues lined up, or nil when not ready.
+    var comparisonRows: [CueComparisonRow]? {
+        guard comparisonNotReadyReason == nil else { return nil }
+        return CueComparison.compare(qlab: qlabNumberedCues, eos: eos.cues)
+    }
+
+    /// The changes Eos needs to match QLab, or nil when not ready.
+    var plannedChanges: [EosChange]? {
+        guard let rows = comparisonRows, let list = settings.eosCueList else { return nil }
+        return EosChange.plan(from: rows, list: list)
     }
 }

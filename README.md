@@ -10,18 +10,18 @@ Runs on the same Mac as QLab and talks to both over OSC. Requires macOS 13 or la
 | Step | What | State |
 | --- | --- | --- |
 | 1 | App skeleton, settings, OSC connections to QLab and Eos | Done |
-| 2 | Side-by-side view with mismatches flagged, live active Eos cue | This branch |
-| 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | Planned |
+| 2 | Side-by-side view with mismatches flagged, live active Eos cue | Done |
+| 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | This branch |
 | 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Planned |
 
-The app reads only so far. Nothing is sent to Eos that changes the show.
+Nothing is sent to Eos that changes the show until you press Approve on a change.
 
 ## The Compare view
 
 Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of the same number
 (1, 1.0 and 01 all count as cue 1). Each row gets one status:
 
-| Status | Meaning | What step 3 will offer |
+| Status | Meaning | Change offered |
 | --- | --- | --- |
 | Matches | Same number, and the Eos label equals the QLab name | Nothing |
 | Label differs | Cue exists in both, label is different | Update the Eos label |
@@ -33,6 +33,32 @@ Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of t
 The QLab name used is the one shown in QLab's cue list, so a cue with no name uses QLab's default
 name. Eos cue parts are not compared. Eos numbers may have up to 4 decimal places.
 The "Eos cue list" and "QLab cues" tabs show each side on its own.
+
+## Approving changes
+
+The panel on the right of the Compare view lists every change Eos needs, one card each, with
+the exact command lines that will be sent. Press **Approve** to send that one change, or **Skip**
+to hide it for now. After sending, the app re-reads the Eos list; if Eos still differs after
+6 seconds the card says so and offers **Try again**.
+
+| Change | Command lines sent (`/eos/newcmd`) |
+| --- | --- |
+| Add | `Record Only Cue 5/12#`, then `Cue 5/12 Time 0#`, then `Cue 5/12 Label %1#` with the QLab name |
+| Edit | `Cue 5/12 Label %1#` with the QLab name |
+| Delete | `Delete Cue 5/12 Enter Enter` |
+
+New cues must be blank. Record Only stores only manual data, so with nothing manual on stage the
+cue is empty. **Check this on Nomad before using it on a show**, and if your console needs a
+different command, change "Command to add a blank cue" in Settings (`{list}` and `{cue}` are filled in).
+
+Labels are sent as OSC arguments (`%1`), so words like "Enter" or "Time" in a QLab name are
+treated as text, not keys.
+
+"Send as Eos user" (optional) sends commands as that Eos user number, so the operator's own
+command line isn't touched. Empty uses the console's current user.
+
+Every change sent is written to the **Action log** tab (newest 500 lines), with the time, the
+change, the commands sent and whether Eos confirmed it. "Copy all" copies the log as text.
 
 ## Build and run
 
