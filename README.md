@@ -11,8 +11,8 @@ Runs on the same Mac as QLab and talks to both over OSC. Requires macOS 13 or la
 | --- | --- | --- |
 | 1 | App skeleton, settings, OSC connections to QLab and Eos | Done |
 | 2 | Side-by-side view with mismatches flagged, live active Eos cue | Done |
-| 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | This branch |
-| 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Planned |
+| 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | Done |
+| 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Done: see [TESTING.md](TESTING.md) |
 
 Nothing is sent to Eos that changes the show until you press Approve on a change.
 
