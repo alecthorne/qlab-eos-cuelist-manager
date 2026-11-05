@@ -1,0 +1,144 @@
+import Foundation
+
+/// One cue (or cue part) in an Eos cue list.
+public struct EosCue: Identifiable, Hashable {
+    public let list: Int
+    /// Cue number as Eos reports it, e.g. "1" or "1.5".
+    public let number: String
+    /// 0 for the cue itself, 1 or more for a part of a multipart cue.
+    public let part: Int
+    /// Position of this entry in the cue list (0-based).
+    public let index: Int
+    public let uid: String
+    public let label: String
+    /// Up time in milliseconds, if Eos sent one.
+    public let upTimeMs: Int?
+
+    public var id: String { uid.isEmpty ? "\(list)/\(number)/\(part)" : uid }
+    public var isPart: Bool { part > 0 }
+
+    public init(list: Int, number: String, part: Int, index: Int, uid: String, label: String, upTimeMs: Int?) {
+        self.list = list
+        self.number = number
+        self.part = part
+        self.index = index
+        self.uid = uid
+        self.label = label
+        self.upTimeMs = upTimeMs
+    }
+}
+
+/// OSC requests sent to Eos.
+public enum EosRequest {
+    public static let ping = OSCMessage("/eos/ping")
+    public static let version = OSCMessage("/eos/get/version")
+    /// Ask Eos to send `/eos/out/notify/...` when show data changes.
+    public static let subscribe = OSCMessage("/eos/subscribe", [.int(1)])
+
+    public static func cueCount(list: Int) -> OSCMessage {
+        OSCMessage("/eos/get/cue/\(list)/count")
+    }
+
+    /// Request the cue at a 0-based position in a cue list.
+    public static func cue(list: Int, index: Int) -> OSCMessage {
+        OSCMessage("/eos/get/cue/\(list)/index/\(index)")
+    }
+}
+
+/// An OSC message from Eos that this app cares about.
+public enum EosOutput: Equatable {
+    case cueCount(list: Int, count: Int)
+    case cue(EosCue, listCount: Int)
+    /// Show data for this cue list changed; re-read it.
+    case cueListChanged(list: Int)
+    case activeCue(list: Int, number: String, progress: Double)
+    case activeCueText(String)
+    case pendingCue(list: Int, number: String)
+    case pendingCueText(String)
+    case version(String)
+    case showName(String)
+    /// A show was loaded or cleared; re-read everything.
+    case showReset
+    case ping
+    case other
+
+    public static func parse(_ message: OSCMessage) -> EosOutput {
+        let parts = message.addressComponents
+        guard parts.count >= 3, parts[0] == "eos", parts[1] == "out" else { return .other }
+        let rest = Array(parts.dropFirst(2))
+        let args = message.arguments
+
+        switch rest.first ?? "" {
+        case "ping":
+            return .ping
+
+        case "get":
+            if rest == ["get", "version"], let version = args.first?.stringValue {
+                return .version(version)
+            }
+            // /eos/out/get/cue/<list>/count = <count>
+            if rest.count == 4, rest[1] == "cue", rest[3] == "count",
+               let list = Int(rest[2]), let count = args.first?.intValue {
+                return .cueCount(list: list, count: count)
+            }
+            // /eos/out/get/cue/<list>/<cue>/<part>/list/<index>/<count>
+            // args: 0 index, 1 uid, 2 label, 3 up time (ms), ...
+            // Eos sends extra replies with fx/links/actions before "list"; those are ignored.
+            if rest.count == 8, rest[1] == "cue", rest[5] == "list",
+               let list = Int(rest[2]), let part = Int(rest[4]),
+               let index = Int(rest[6]), let count = Int(rest[7]) {
+                let cue = EosCue(
+                    list: list,
+                    number: rest[3],
+                    part: part,
+                    index: index,
+                    uid: args.count > 1 ? (args[1].stringValue ?? "") : "",
+                    label: args.count > 2 ? (args[2].stringValue ?? "") : "",
+                    upTimeMs: args.count > 3 ? args[3].intValue : nil
+                )
+                return .cue(cue, listCount: count)
+            }
+            return .other
+
+        case "notify":
+            // /eos/out/notify/cue/<list>/...
+            if rest.count >= 3, rest[1] == "cue", let list = Int(rest[2]) {
+                return .cueListChanged(list: list)
+            }
+            return .other
+
+        case "active", "pending":
+            let isActive = rest[0] == "active"
+            guard rest.count >= 2, rest[1] == "cue" else { return .other }
+            if rest.count == 3, rest[2] == "text" {
+                let text = args.first?.stringValue ?? ""
+                return isActive ? .activeCueText(text) : .pendingCueText(text)
+            }
+            // /eos/out/active/cue/<list>/<cue> = <progress 0..1>
+            if rest.count == 4, let list = Int(rest[2]) {
+                if isActive {
+                    return .activeCue(list: list, number: rest[3], progress: args.first?.doubleValue ?? 0)
+                }
+                return .pendingCue(list: list, number: rest[3])
+            }
+            return .other
+
+        case "show":
+            if rest == ["show", "name"] { return .showName(args.first?.stringValue ?? "") }
+            if rest == ["show", "loaded"] || rest == ["show", "cleared"] { return .showReset }
+            return .other
+
+        default:
+            return .other
+        }
+    }
+}
+
+/// Validates the Eos cue list number typed by the user. There is deliberately no default.
+public enum EosCueListNumber {
+    public static func parse(_ text: String) -> Int? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard let value = Int(trimmed), value >= 1, value <= 999 else { return nil }
+        return value
+    }
+}
