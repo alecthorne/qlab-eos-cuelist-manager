@@ -10,68 +10,61 @@ struct ComparisonPane: View {
     @State private var onlyDifferences = false
 
     var body: some View {
-        if let notReady = notReadyReason {
+        if let notReady = model.comparisonNotReadyReason {
             Placeholder(text: notReady)
         } else {
-            let rows = CueComparison.compare(qlab: model.qlabNumberedCues, eos: eos.cues)
+            let rows = model.comparisonRows ?? []
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 16) {
-                    Summary(rows: rows)
-                    Spacer()
-                    if eos.isLoadingCues {
-                        ProgressView().controlSize(.small)
+            HSplitView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 16) {
+                        Summary(rows: rows)
+                        Spacer()
+                        if eos.isLoadingCues {
+                            ProgressView().controlSize(.small)
+                        }
+                        Toggle("Only show differences", isOn: $onlyDifferences)
                     }
-                    Toggle("Only show differences", isOn: $onlyDifferences)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
 
-                Table(shown) {
-                    TableColumn("Status") { row in
-                        StatusBadge(status: row.status)
+                    Table(shown) {
+                        TableColumn("Status") { row in
+                            StatusBadge(status: row.status)
+                        }
+                        .width(min: 130, ideal: 160, max: 220)
+                        TableColumn("QLab #") { row in
+                            Text(row.qlab?.number ?? "")
+                        }
+                        .width(min: 50, ideal: 60, max: 100)
+                        TableColumn("QLab name") { row in
+                            Text(row.qlab?.displayName ?? "")
+                        }
+                        TableColumn("") { row in
+                            Text(isActive(row) ? "▶" : "")
+                                .foregroundStyle(.green)
+                        }
+                        .width(16)
+                        TableColumn("Eos cue") { row in
+                            Text(row.eos?.number ?? "")
+                        }
+                        .width(min: 50, ideal: 60, max: 100)
+                        TableColumn("Eos label") { row in
+                            Text(row.eos?.label ?? "")
+                                .foregroundStyle(row.status == .labelDiffers ? Color.orange : Color.primary)
+                        }
+                        TableColumn("Time") { row in
+                            Text(row.eos?.upTimeMs.map(formatSeconds) ?? "")
+                        }
+                        .width(min: 40, ideal: 50, max: 80)
                     }
-                    .width(min: 130, ideal: 160, max: 220)
-                    TableColumn("QLab #") { row in
-                        Text(row.qlab?.number ?? "")
-                    }
-                    .width(min: 50, ideal: 60, max: 100)
-                    TableColumn("QLab name") { row in
-                        Text(row.qlab?.displayName ?? "")
-                    }
-                    TableColumn("") { row in
-                        Text(isActive(row) ? "▶" : "")
-                            .foregroundStyle(.green)
-                    }
-                    .width(16)
-                    TableColumn("Eos cue") { row in
-                        Text(row.eos?.number ?? "")
-                    }
-                    .width(min: 50, ideal: 60, max: 100)
-                    TableColumn("Eos label") { row in
-                        Text(row.eos?.label ?? "")
-                            .foregroundStyle(row.status == .labelDiffers ? Color.orange : Color.primary)
-                    }
-                    TableColumn("Time") { row in
-                        Text(row.eos?.upTimeMs.map(formatSeconds) ?? "")
-                    }
-                    .width(min: 40, ideal: 50, max: 80)
                 }
+                .frame(minWidth: 520)
+
+                ApprovalPanel(changes: model.plannedChanges ?? [])
+                    .frame(minWidth: 300, idealWidth: 360, maxWidth: 480)
             }
         }
-    }
-
-    /// Comparing before both sides are loaded would flag every cue, so say what's missing instead.
-    private var notReadyReason: String? {
-        if settings.eosCueList == nil { return "Choose the Eos cue list to sync in Settings." }
-        if model.selectedQLabCueList == nil {
-            return qlab.status == .connected
-                ? "Choose the QLab cue list to use in Settings."
-                : "Waiting for QLab."
-        }
-        if eos.status != .connected { return "Waiting for Eos." }
-        if !eos.cuesLoaded { return "Reading Eos cue list \(settings.eosCueList ?? 0)…" }
-        return nil
     }
 
     private func isActive(_ row: CueComparisonRow) -> Bool {
@@ -132,9 +125,9 @@ struct StatusBadge: View {
     private var explanation: String {
         switch status {
         case .match: return "Same number and label in QLab and Eos."
-        case .labelDiffers: return "The Eos label doesn't match the QLab name. Step 3 will offer to update it."
-        case .missingInEos: return "QLab has this cue number but Eos doesn't. Step 3 will offer to add it."
-        case .extraInEos: return "Eos has this cue but QLab doesn't. Step 3 will offer to delete it."
+        case .labelDiffers: return "The Eos label doesn't match the QLab name. You can approve updating it in the panel on the right."
+        case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it (blank, time 0) in the panel on the right."
+        case .extraInEos: return "Eos has this cue but QLab doesn't. You can approve deleting it in the panel on the right."
         case .invalidQLabNumber: return "This QLab cue number can't be used as an Eos cue number (Eos needs a number like 12 or 12.5). Renumber it in QLab to sync it."
         case .duplicateQLabNumber: return "More than one QLab cue has this number. Fix it in QLab; nothing will be synced for this number until then."
         }

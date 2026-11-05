@@ -106,4 +106,13 @@ final class BoundedLogTests: XCTestCase {
         XCTAssertEqual(log.lines.first, 20)
         XCTAssertEqual(log.lines.last, 519)
     }
+
+    func testUpdatesNewestMatchingLine() {
+        var log = BoundedLog<String>(capacity: 3)
+        ["a", "b", "a"].forEach { log.append($0) }
+        log.updateLast(where: { $0 == "a" }) { $0 = "A" }
+        XCTAssertEqual(log.lines, ["a", "b", "A"])
+        log.updateLast(where: { $0 == "zzz" }) { $0 = "never" }
+        XCTAssertEqual(log.lines, ["a", "b", "A"])
+    }
 }
