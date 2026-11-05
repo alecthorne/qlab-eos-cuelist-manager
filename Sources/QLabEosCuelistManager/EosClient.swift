@@ -1,0 +1,239 @@
+import CueSyncCore
+import Foundation
+import Network
+
+struct EosConnectionConfig: Equatable {
+    var host: String
+    var framing: OSCTCPFraming
+    /// BSD interface name; empty = let macOS choose.
+    var interfaceName: String
+
+    var port: UInt16 { framing == .slip ? 3037 : 3032 }
+}
+
+struct EosCueRef: Equatable {
+    let list: Int
+    let number: String
+}
+
+/// Talks to an Eos console (or Nomad) over OSC/TCP, on the network interface the user chose.
+final class EosClient: ObservableObject {
+    enum Status: Equatable {
+        case disconnected
+        case notConfigured(String)
+        case connecting
+        case connected
+        case error(String)
+    }
+
+    @Published private(set) var status: Status = .disconnected
+    @Published private(set) var version = ""
+    @Published private(set) var showName = ""
+    /// The cue list being synced. nil until the user chooses one.
+    @Published private(set) var cueList: Int?
+    /// Cues (and cue parts) in `cueList`, in list order.
+    @Published private(set) var cues: [EosCue] = []
+    @Published private(set) var isLoadingCues = false
+    @Published private(set) var activeCue: EosCueRef?
+    @Published private(set) var activeCueText = ""
+    @Published private(set) var pendingCueText = ""
+
+    private let log: ConnectionLog
+    private let interfaceLookup: (String) -> NWInterface?
+    private var config: EosConnectionConfig?
+    private var connection: OSCTCPConnection?
+    private var reconnectWork: DispatchWorkItem?
+    private var refreshWork: DispatchWorkItem?
+    private var heartbeat: Timer?
+    private var lastMessageAt = Date()
+
+    private var expectedCueCount = 0
+    private var fetchedCues: [Int: EosCue] = [:]
+
+    init(log: ConnectionLog, interfaceLookup: @escaping (String) -> NWInterface?) {
+        self.log = log
+        self.interfaceLookup = interfaceLookup
+    }
+
+    func start(config: EosConnectionConfig, cueList: Int?) {
+        stop()
+        self.config = config
+        self.cueList = cueList
+        open()
+    }
+
+    func stop() {
+        reconnectWork?.cancel()
+        refreshWork?.cancel()
+        heartbeat?.invalidate()
+        heartbeat = nil
+        connection?.cancel()
+        connection = nil
+        config = nil
+        status = .disconnected
+        version = ""
+        showName = ""
+        clearCues()
+        activeCue = nil
+        activeCueText = ""
+        pendingCueText = ""
+    }
+
+    /// Changes which cue list is synced, and re-reads it.
+    func setCueList(_ list: Int?) {
+        guard list != cueList else { return }
+        cueList = list
+        clearCues()
+        refreshCues()
+    }
+
+    /// Re-reads every cue in the chosen cue list.
+    func refreshCues() {
+        guard status == .connected, let cueList else { return }
+        isLoadingCues = true
+        connection?.send(EosRequest.cueCount(list: cueList))
+    }
+
+    // MARK: - Connection
+
+    private func open() {
+        guard let config else { return }
+        let host = config.host.trimmingCharacters(in: .whitespaces)
+        guard !host.isEmpty else {
+            status = .notConfigured("Enter the Eos console's IP address in Settings")
+            return
+        }
+
+        var interface: NWInterface?
+        if !config.interfaceName.isEmpty {
+            interface = interfaceLookup(config.interfaceName)
+            if interface == nil {
+                let reason = "Network interface \(config.interfaceName) is not available"
+                if status != .error(reason) { log.add("Eos", reason + ". Retrying.") }
+                status = .error(reason)
+                scheduleReconnect()
+                return
+            }
+        }
+
+        let connection = OSCTCPConnection(host: host, port: config.port, framing: config.framing, requiredInterface: interface)
+        connection.onStateChange = { [weak self] state in self?.handle(state) }
+        connection.onMessage = { [weak self] message in self?.handle(message) }
+        self.connection = connection
+        connection.start()
+    }
+
+    private func handle(_ state: OSCTCPConnection.State) {
+        switch state {
+        case .connecting:
+            status = .connecting
+        case .ready:
+            status = .connected
+            let via = (config?.interfaceName.isEmpty ?? true) ? "" : " via \(config!.interfaceName)"
+            log.add("Eos", "Connected to \(config?.host ?? ""):\(config?.port ?? 0)\(via)")
+            lastMessageAt = Date()
+            connection?.send(EosRequest.version)
+            connection?.send(EosRequest.subscribe)
+            refreshCues()
+            startHeartbeat()
+        case .failed(let reason):
+            connectionLost(reason)
+        }
+    }
+
+    private func connectionLost(_ reason: String) {
+        if status != .error(reason) {
+            log.add("Eos", "Not connected: \(reason). Retrying.")
+        }
+        heartbeat?.invalidate()
+        heartbeat = nil
+        connection?.cancel()
+        connection = nil
+        status = .error(reason)
+        isLoadingCues = false
+        scheduleReconnect()
+    }
+
+    private func scheduleReconnect() {
+        reconnectWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.connection == nil, self.config != nil else { return }
+            self.open()
+        }
+        reconnectWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: work)
+    }
+
+    /// Pings Eos every 5 seconds, and treats 15 seconds of silence as a dropped connection
+    /// (a pulled cable doesn't always close a TCP connection).
+    private func startHeartbeat() {
+        heartbeat?.invalidate()
+        heartbeat = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            if Date().timeIntervalSince(self.lastMessageAt) > 15 {
+                self.connectionLost("No reply from Eos for 15 seconds")
+            } else {
+                self.connection?.send(EosRequest.ping)
+            }
+        }
+    }
+
+    // MARK: - Messages
+
+    private func handle(_ message: OSCMessage) {
+        lastMessageAt = Date()
+        switch EosOutput.parse(message) {
+        case .version(let value):
+            version = value
+        case .showName(let value):
+            showName = value
+        case .showReset:
+            log.add("Eos", "Show loaded or cleared. Re-reading cues.")
+            scheduleRefresh()
+        case .cueListChanged(let list):
+            if list == cueList { scheduleRefresh() }
+        case .cueCount(let list, let count):
+            guard list == cueList else { return }
+            expectedCueCount = count
+            fetchedCues = [:]
+            if count == 0 {
+                cues = []
+                isLoadingCues = false
+            } else {
+                for index in 0..<count {
+                    connection?.send(EosRequest.cue(list: list, index: index))
+                }
+            }
+        case .cue(let cue, _):
+            guard cue.list == cueList, isLoadingCues else { return }
+            fetchedCues[cue.index] = cue
+            if fetchedCues.count >= expectedCueCount {
+                cues = fetchedCues.values.sorted { $0.index < $1.index }
+                isLoadingCues = false
+            }
+        case .activeCue(let list, let number, _):
+            activeCue = EosCueRef(list: list, number: number)
+        case .activeCueText(let text):
+            activeCueText = text
+            if text.isEmpty { activeCue = nil }
+        case .pendingCueText(let text):
+            pendingCueText = text
+        case .pendingCue, .ping, .other:
+            break
+        }
+    }
+
+    private func scheduleRefresh() {
+        refreshWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.refreshCues() }
+        refreshWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+    }
+
+    private func clearCues() {
+        cues = []
+        fetchedCues = [:]
+        expectedCueCount = 0
+        isLoadingCues = false
+    }
+}

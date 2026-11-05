@@ -1,0 +1,82 @@
+import CueSyncCore
+import SwiftUI
+
+struct SettingsView: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var qlab: QLabClient
+    @EnvironmentObject private var interfaces: NetworkInterfaceMonitor
+
+    var body: some View {
+        Form {
+            Section("QLab (on this Mac)") {
+                Picker("Workspace", selection: $settings.qlabWorkspaceID) {
+                    Text("The only open workspace").tag("")
+                    ForEach(qlab.workspaces) { workspace in
+                        Text(workspace.displayName).tag(workspace.id)
+                    }
+                    if !settings.qlabWorkspaceID.isEmpty,
+                       !qlab.workspaces.contains(where: { $0.id == settings.qlabWorkspaceID }) {
+                        Text("Saved workspace (not open)").tag(settings.qlabWorkspaceID)
+                    }
+                }
+
+                SecureField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
+
+                Picker("Cue list", selection: $settings.qlabCueListID) {
+                    Text("Choose a cue list…").tag("")
+                    ForEach(qlab.cueLists) { list in
+                        Text(list.displayName).tag(list.id)
+                    }
+                    if !settings.qlabCueListID.isEmpty,
+                       !qlab.cueLists.contains(where: { $0.id == settings.qlabCueListID }) {
+                        Text("Saved cue list (not found)").tag(settings.qlabCueListID)
+                    }
+                }
+
+                HStack {
+                    StatusLabel(qlab: qlab)
+                    Spacer()
+                    Button("Reconnect to QLab") { model.connectQLab() }
+                }
+            }
+
+            Section("Eos") {
+                TextField("Console IP address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
+
+                Picker("Network interface", selection: $settings.eosInterfaceName) {
+                    Text("Automatic (let macOS choose)").tag("")
+                    ForEach(interfaces.interfaces) { interface in
+                        Text(interface.title).tag(interface.name)
+                    }
+                    if !settings.eosInterfaceName.isEmpty,
+                       !interfaces.interfaces.contains(where: { $0.name == settings.eosInterfaceName }) {
+                        Text("\(settings.eosInterfaceName) (not available)").tag(settings.eosInterfaceName)
+                    }
+                }
+
+                Picker("Protocol", selection: $settings.eosFraming) {
+                    Text("OSC 1.1 (TCP port 3037)").tag(OSCTCPFraming.slip)
+                    Text("OSC 1.0 (TCP port 3032)").tag(OSCTCPFraming.lengthPrefix)
+                }
+
+                TextField("Cue list to sync", text: $settings.eosCueListText, prompt: Text("Required"))
+                if settings.eosCueList == nil {
+                    Text("Enter the number of the Eos cue list to keep in sync (1 to 999). There is no default.")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
+
+                HStack {
+                    EosStatusLabel()
+                    Spacer()
+                    Button("Connect to Eos") { model.connectEos() }
+                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .onChange(of: settings.qlabWorkspaceID) { _ in model.connectQLab() }
+        .onChange(of: settings.eosCueListText) { _ in model.eos.setCueList(settings.eosCueList) }
+    }
+}
