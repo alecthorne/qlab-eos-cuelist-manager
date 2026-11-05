@@ -7,6 +7,14 @@ struct ContentView: View {
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var eos: EosClient
     @State private var showingSettings = false
+    @State private var tab: Tab = .compare
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case compare = "Compare"
+        case eos = "Eos cue list"
+        case qlab = "QLab cues"
+        var id: String { rawValue }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,12 +29,24 @@ struct ContentView: View {
                        buttonTitle: "Open Settings") { showingSettings = true }
             }
 
-            HSplitView {
-                QLabCuesPane()
-                    .frame(minWidth: 360)
-                EosCuesPane()
-                    .frame(minWidth: 360)
+            Picker("View", selection: $tab) {
+                ForEach(Tab.allCases) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 420)
+            .padding(.vertical, 8)
+
+            Group {
+                switch tab {
+                case .compare: ComparisonPane()
+                case .eos: EosCuesPane()
+                case .qlab: QLabCuesPane()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
             ConnectionLogView()
@@ -229,11 +249,6 @@ struct EosCuesPane: View {
     private func isActive(_ cue: EosCue) -> Bool {
         guard let active = eos.activeCue, !cue.isPart else { return false }
         return active.list == cue.list && active.number == cue.number
-    }
-
-    private func formatSeconds(_ ms: Int) -> String {
-        let seconds = Double(ms) / 1000
-        return seconds == seconds.rounded() ? String(Int(seconds)) : String(format: "%.1f", seconds)
     }
 }
 

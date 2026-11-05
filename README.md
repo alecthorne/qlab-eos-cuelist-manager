@@ -9,13 +9,30 @@ Runs on the same Mac as QLab and talks to both over OSC. Requires macOS 13 or la
 
 | Step | What | State |
 | --- | --- | --- |
-| 1 | App skeleton, settings, OSC connections to QLab and Eos | This branch |
-| 2 | Side-by-side view with mismatches flagged, live active Eos cue | Planned |
+| 1 | App skeleton, settings, OSC connections to QLab and Eos | Done |
+| 2 | Side-by-side view with mismatches flagged, live active Eos cue | This branch |
 | 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | Planned |
 | 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Planned |
 
-Step 1 shows both cue lists (unaligned) and the active Eos cue, so the connections can be checked.
-It reads only. Nothing is sent to Eos that changes the show.
+The app reads only so far. Nothing is sent to Eos that changes the show.
+
+## The Compare view
+
+Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of the same number
+(1, 1.0 and 01 all count as cue 1). Each row gets one status:
+
+| Status | Meaning | What step 3 will offer |
+| --- | --- | --- |
+| Matches | Same number, and the Eos label equals the QLab name | Nothing |
+| Label differs | Cue exists in both, label is different | Update the Eos label |
+| Missing in Eos | QLab has the number, Eos doesn't | Add the cue in Eos |
+| Not in QLab | Eos has the number, QLab doesn't | Delete the cue in Eos |
+| Not an Eos number | QLab number like "1A" or "Pre" that Eos can't use | Nothing: renumber it in QLab |
+| Duplicate number | Two QLab cues map to the same Eos number | Nothing: fix it in QLab |
+
+The QLab name used is the one shown in QLab's cue list, so a cue with no name uses QLab's default
+name. Eos cue parts are not compared. Eos numbers may have up to 4 decimal places.
+The "Eos cue list" and "QLab cues" tabs show each side on its own.
 
 ## Build and run
 
