@@ -17,6 +17,12 @@ public struct BoundedLog<Element> {
         }
     }
 
+    /// Changes the newest line matching `predicate`, if it is still in the log.
+    public mutating func updateLast(where predicate: (Element) -> Bool, _ change: (inout Element) -> Void) {
+        guard let index = lines.lastIndex(where: predicate) else { return }
+        change(&lines[index])
+    }
+
     public mutating func removeAll() {
         lines.removeAll()
     }

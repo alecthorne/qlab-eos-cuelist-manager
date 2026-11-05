@@ -96,6 +96,16 @@ final class EosClient: ObservableObject {
         connection?.send(EosRequest.cueCount(list: cueList))
     }
 
+    /// Sends command lines to Eos, in order. Returns false if not connected.
+    @discardableResult
+    func send(_ commands: [EosCommand], user: Int?) -> Bool {
+        guard status == .connected, let connection else { return false }
+        for command in commands {
+            connection.send(command.message(user: user))
+        }
+        return true
+    }
+
     // MARK: - Connection
 
     private func open() {

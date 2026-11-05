@@ -11,6 +11,8 @@ final class AppSettings: ObservableObject {
         static let eosFraming = "eosFraming"
         static let eosInterfaceName = "eosInterfaceName"
         static let eosCueList = "eosCueList"
+        static let eosAddTemplate = "eosAddTemplate"
+        static let eosUser = "eosUser"
     }
 
     private let defaults: UserDefaults
@@ -28,6 +30,14 @@ final class AppSettings: ObservableObject {
     /// The Eos cue list to keep in sync, exactly as typed. Deliberately has no default.
     @Published var eosCueListText: String { didSet { defaults.set(eosCueListText, forKey: Key.eosCueList) } }
 
+    /// Command line used to create a blank cue; {list} and {cue} are filled in.
+    @Published var eosAddTemplate: String { didSet { defaults.set(eosAddTemplate, forKey: Key.eosAddTemplate) } }
+    /// Optional Eos user number to send commands as. Empty = the console's current user.
+    @Published var eosUserText: String { didSet { defaults.set(eosUserText, forKey: Key.eosUser) } }
+
+    /// The Eos user to send as: .some(nil) for the current user, nil if what was typed is invalid.
+    var eosUser: Int?? { EosUserNumber.parse(eosUserText) }
+
     /// The validated Eos cue list number, or nil if the user has not entered a valid one.
     var eosCueList: Int? { EosCueListNumber.parse(eosCueListText) }
 
@@ -42,5 +52,7 @@ final class AppSettings: ObservableObject {
         eosFraming = OSCTCPFraming(rawValue: defaults.string(forKey: Key.eosFraming) ?? "") ?? .slip
         eosInterfaceName = defaults.string(forKey: Key.eosInterfaceName) ?? ""
         eosCueListText = defaults.string(forKey: Key.eosCueList) ?? ""
+        eosAddTemplate = defaults.string(forKey: Key.eosAddTemplate) ?? EosCommandBuilder.defaultAddTemplate
+        eosUserText = defaults.string(forKey: Key.eosUser) ?? ""
     }
 }

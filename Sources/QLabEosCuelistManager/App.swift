@@ -43,5 +43,7 @@ extension View {
             .environmentObject(model.interfaces)
             .environmentObject(model.qlab)
             .environmentObject(model.eos)
+            .environmentObject(model.actionLog)
+            .environmentObject(model.changes)
     }
 }
