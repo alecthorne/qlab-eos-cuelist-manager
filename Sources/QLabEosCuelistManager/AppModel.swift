@@ -1,3 +1,4 @@
+import Combine
 import CueSyncCore
 import Foundation
 
@@ -15,6 +16,7 @@ final class AppModel: ObservableObject {
     )
 
     private var started = false
+    private var interfaceWatch: AnyCancellable?
 
     init() {
         let settings = AppSettings()
@@ -25,6 +27,26 @@ final class AppModel: ObservableObject {
         self.interfaces = interfaces
         self.qlab = QLabClient(log: log)
         self.eos = EosClient(log: log) { name in interfaces.nwInterface(named: name) }
+
+        // Fires now with the current list, then whenever interfaces come and go.
+        interfaceWatch = interfaces.$interfaces.sink { [weak self] list in
+            self?.applyDefaultEosInterface(list)
+        }
+    }
+
+    /// Until the user picks an interface, use the one with a 10.101.x.x address (or Automatic if none),
+    /// and reconnect to Eos when that changes.
+    private func applyDefaultEosInterface(_ list: [NetworkInterfaceInfo]) {
+        let name = EosDefaults.interface(in: list.map { (name: $0.name, addresses: $0.addresses) }) ?? ""
+        if settings.applyDefaultEosInterface(name), started {
+            connectEos()
+        }
+    }
+
+    /// Forgets the interface picked in Settings and goes back to the default.
+    func useDefaultEosInterface() {
+        settings.clearEosInterfaceChoice()
+        applyDefaultEosInterface(interfaces.interfaces)
     }
 
     func startIfNeeded() {
