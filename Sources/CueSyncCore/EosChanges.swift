@@ -65,32 +65,49 @@ public struct EosChange: Identifiable, Equatable {
     }
 }
 
-/// One Eos command line, sent with `/eos/newcmd` (which clears the command line first).
-/// `%1`, `%2`… in the text are filled from `arguments` by Eos, so labels are sent as data
-/// and never typed as keys.
-public struct EosCommand: Equatable {
-    public let text: String
-    public let arguments: [String]
+/// One message sent to Eos for a change.
+public enum EosCommand: Equatable {
+    /// A command line, sent with `/eos/newcmd` (which clears the command line first).
+    /// `%1`, `%2`… in the text are filled from `arguments` by Eos.
+    case commandLine(String, arguments: [String] = [])
+    /// Sets a cue's label with `/eos/set/cue/<list>/<cue>/label`, the label as an OSC string.
+    /// Nothing is typed on a command line, so any text is safe and it works in any mode.
+    case setCueLabel(list: Int, number: String, label: String)
 
-    public init(_ text: String, arguments: [String] = []) {
-        self.text = text
-        self.arguments = arguments
+    /// A command line with no arguments.
+    public static func line(_ text: String) -> EosCommand { .commandLine(text, arguments: []) }
+
+    /// The command line text, or nil for messages that don't use the command line.
+    public var text: String? {
+        if case .commandLine(let text, _) = self { return text }
+        return nil
     }
 
-    /// How the command reads on the Eos command line, for showing to the user.
+    /// How the command reads, for showing to the user and in the action log.
     public var displayText: String {
-        var result = text
-        for (index, argument) in arguments.enumerated().reversed() {
-            result = result.replacingOccurrences(of: "%\(index + 1)", with: "“\(argument)”")
+        switch self {
+        case .commandLine(let text, let arguments):
+            var result = text
+            for (index, argument) in arguments.enumerated().reversed() {
+                result = result.replacingOccurrences(of: "%\(index + 1)", with: "“\(argument)”")
+            }
+            return result
+        case .setCueLabel(let list, let number, let label):
+            return "Set label of cue \(list)/\(number) to “\(label)”"
         }
-        return result
     }
 
-    /// The OSC message. `user` sends it as that Eos user (`/eos/user/<n>/newcmd`),
-    /// so the operator's own command line isn't touched; nil uses the console's current user.
+    /// The OSC message. For command lines, `user` sends it as that Eos user
+    /// (`/eos/user/<n>/newcmd`), so the operator's own command line isn't touched;
+    /// nil uses the console's current user.
     public func message(user: Int?) -> OSCMessage {
-        let prefix = user.map { "/eos/user/\($0)" } ?? "/eos"
-        return OSCMessage(prefix + "/newcmd", [.string(text)] + arguments.map { .string($0) })
+        switch self {
+        case .commandLine(let text, let arguments):
+            let prefix = user.map { "/eos/user/\($0)" } ?? "/eos"
+            return OSCMessage(prefix + "/newcmd", [.string(text)] + arguments.map { .string($0) })
+        case .setCueLabel(let list, let number, let label):
+            return OSCMessage("/eos/set/cue/\(list)/\(number)/label", [.string(label)])
+        }
     }
 }
 
@@ -101,26 +118,19 @@ public enum EosCommandBuilder {
 
     public static func commands(for change: EosChange, addTemplate: String = defaultAddTemplate) -> [EosCommand] {
         let cue = "Cue \(change.list)/\(change.number)"
+        let label = EosCommand.setCueLabel(list: change.list, number: change.number, label: change.label)
         switch change.kind {
         case .add:
             let create = addTemplate
                 .replacingOccurrences(of: "{list}", with: String(change.list))
                 .replacingOccurrences(of: "{cue}", with: change.number)
-            return [EosCommand(create), EosCommand("\(cue) Time 0#"), labelCommand(cue: cue, label: change.label)]
+            return [.line(create), .line("\(cue) Time 0#"), label]
         case .updateLabel:
-            return [labelCommand(cue: cue, label: change.label)]
+            return [label]
         case .delete:
             // The second Enter confirms the delete.
-            return [EosCommand("Delete \(cue) Enter Enter")]
+            return [.line("Delete \(cue) Enter Enter")]
         }
-    }
-
-    static func labelCommand(cue: String, label: String) -> EosCommand {
-        if label.isEmpty {
-            // Pressing Label twice clears the label.
-            return EosCommand("\(cue) Label Label#")
-        }
-        return EosCommand("\(cue) Label %1#", arguments: [label])
     }
 }
 

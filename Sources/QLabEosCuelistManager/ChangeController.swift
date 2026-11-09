@@ -150,7 +150,11 @@ final class ChangeController: ObservableObject {
         }
         if current.contains(where: { $0.id == change.id }) {
             states[change.id] = .notConfirmed
-            actionLog.setResult(logID, "Sent, but Eos still differs")
+            // Show what Eos's command line said, which usually explains why.
+            let said = eos.commandLineSinceSend.suffix(3).joined(separator: "  /  ")
+            actionLog.setResult(logID, said.isEmpty
+                ? "Sent, but Eos still differs (no command line text from Eos)"
+                : "Sent, but Eos still differs. Eos said: \(said)")
         } else {
             states.removeValue(forKey: change.id)
             actionLog.setResult(logID, "Confirmed")

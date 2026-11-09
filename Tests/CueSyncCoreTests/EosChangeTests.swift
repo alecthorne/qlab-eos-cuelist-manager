@@ -30,10 +30,12 @@ final class EosChangeTests: XCTestCase {
         XCTAssertEqual(commands.map(\.displayText), [
             "Record Only Cue 3/12.5#",
             "Cue 3/12.5 Time 0#",
-            "Cue 3/12.5 Label “Scene 2”#",
+            "Set label of cue 3/12.5 to “Scene 2”",
         ])
-        XCTAssertEqual(commands[2].message(user: nil),
-                       OSCMessage("/eos/newcmd", [.string("Cue 3/12.5 Label %1#"), .string("Scene 2")]))
+        XCTAssertEqual(commands[0].message(user: nil), OSCMessage("/eos/newcmd", [.string("Record Only Cue 3/12.5#")]))
+        // Labels go to /eos/set as a string, never typed on the command line, whatever the user setting.
+        XCTAssertEqual(commands[2].message(user: 61),
+                       OSCMessage("/eos/set/cue/3/12.5/label", [.string("Scene 2")]))
     }
 
     func testCustomAddTemplate() {
@@ -45,10 +47,11 @@ final class EosChangeTests: XCTestCase {
     func testEditAndDeleteCommands() {
         let edit = EosChange(kind: .updateLabel, list: 2, number: "7", label: "Enter Time", currentLabel: "old")
         XCTAssertEqual(EosCommandBuilder.commands(for: edit),
-                       [EosCommand("Cue 2/7 Label %1#", arguments: ["Enter Time"])])
+                       [.setCueLabel(list: 2, number: "7", label: "Enter Time")])
 
         let clear = EosChange(kind: .updateLabel, list: 2, number: "7", label: "", currentLabel: "old")
-        XCTAssertEqual(EosCommandBuilder.commands(for: clear).map(\.text), ["Cue 2/7 Label Label#"])
+        XCTAssertEqual(EosCommandBuilder.commands(for: clear).map { $0.message(user: nil) },
+                       [OSCMessage("/eos/set/cue/2/7/label", [.string("")])])
 
         let delete = EosChange(kind: .delete, list: 2, number: "7", label: "", currentLabel: "old")
         XCTAssertEqual(EosCommandBuilder.commands(for: delete).map(\.text), ["Delete Cue 2/7 Enter Enter"])
@@ -56,8 +59,8 @@ final class EosChangeTests: XCTestCase {
     }
 
     func testSendsAsOSCUserWhenSet() {
-        XCTAssertEqual(EosCommand("Go#").message(user: 5).address, "/eos/user/5/newcmd")
-        XCTAssertEqual(EosCommand("Go#").message(user: nil).address, "/eos/newcmd")
+        XCTAssertEqual(EosCommand.line("Go#").message(user: 5).address, "/eos/user/5/newcmd")
+        XCTAssertEqual(EosCommand.line("Go#").message(user: nil).address, "/eos/newcmd")
     }
 
     func testUserNumberParsing() {
