@@ -16,3 +16,13 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: Build and test the Xcode project
+        run: >
+          xcodebuild -project QLabEosCuelistManager.xcodeproj
+          -scheme QLabEosCuelistManager
+          -destination 'platform=macOS'
+          -derivedDataPath build/DerivedData
+          CODE_SIGNING_ALLOWED=NO
+          build test

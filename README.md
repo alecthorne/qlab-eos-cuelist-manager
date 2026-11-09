@@ -62,11 +62,16 @@ change, the commands sent and whether Eos confirmed it. "Copy all" copies the lo
 
 ## Build and run
 
-1. Install Xcode 15 or later.
-2. Open `Package.swift` in Xcode (File > Open, or `open Package.swift`).
-3. Choose the **QLabEosCuelistManager** scheme and **My Mac**, then Run.
+Open **`QLabEosCuelistManager.xcodeproj`** in Xcode 26 or later, choose the
+**QLabEosCuelistManager** scheme and **My Mac**, then Run (⌘R). Tests: ⌘U.
+This builds a proper sandboxed `.app` with the local network permission text.
+Pick your team under Signing & Capabilities the first time if Xcode asks.
 
-Or from Terminal: `swift run QLabEosCuelistManager`. Tests: `swift test`.
+The project uses folder-synced groups, so new files added under `Sources/` or `Tests/`
+are picked up automatically.
+
+The same code also builds as a Swift package, which is what the quick checks use:
+`swift build`, `swift run QLabEosCuelistManager`, `swift test`.
 
 On macOS 15 and later, macOS asks for permission to find devices on local networks the first time
 the app connects to Eos. Allow it, or the Eos connection fails.
