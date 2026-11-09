@@ -54,6 +54,16 @@ struct SettingsView: View {
                         Text("\(settings.eosInterfaceName) (not available)").tag(settings.eosInterfaceName)
                     }
                 }
+                HStack {
+                    Text(settings.eosInterfaceChosen
+                         ? "Chosen by you."
+                         : "Default: the interface with a 10.101.x.x address, or Automatic if there isn't one.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Use default") { model.useDefaultEosInterface() }
+                        .disabled(!settings.eosInterfaceChosen)
+                }
 
                 Picker("Protocol", selection: $settings.eosFraming) {
                     Text("OSC 1.1 (TCP port 3037)").tag(OSCTCPFraming.slip)
@@ -93,7 +103,7 @@ struct SettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.red)
                 } else {
-                    Text("Leave empty to type on the console's current command line. A number sends as that Eos user, so the operator's command line isn't touched.")
+                    Text("Default is user \(EosDefaults.user). A number sends as that Eos user, so the operator's command line isn't touched. Leave empty to type on the console's current command line.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }

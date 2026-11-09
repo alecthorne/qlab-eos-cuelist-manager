@@ -54,7 +54,7 @@ different command, change "Command to add a blank cue" in Settings (`{list}` and
 Labels are sent as OSC arguments (`%1`), so words like "Enter" or "Time" in a QLab name are
 treated as text, not keys.
 
-"Send as Eos user" (optional) sends commands as that Eos user number, so the operator's own
+"Send as Eos user" (default 61) sends commands as that Eos user number, so the operator's own
 command line isn't touched. Empty uses the console's current user.
 
 Every change sent is written to the **Action log** tab (newest 500 lines), with the time, the
@@ -82,7 +82,9 @@ the app connects to Eos. Allow it, or the Eos connection fails.
 - **QLab passcode**: only if the workspace has OSC passcodes set.
 - **QLab cue list**: every numbered cue in this list (including inside groups) is synced.
 - **Eos console IP address** and **network interface**: choose the interface that is on the Eos network.
-  "Automatic" lets macOS pick using its routing table.
+  Until you choose one, the app uses the interface with a 10.101.x.x address, and follows it if it
+  changes (for example a USB adapter plugged in later). With no such interface it uses "Automatic",
+  which lets macOS pick using its routing table. "Use default" forgets your choice.
 - **Protocol**: OSC 1.1 on TCP port 3037 (default), or OSC 1.0 on TCP port 3032.
 - **Eos cue list to sync**: required. There is deliberately no default.
 

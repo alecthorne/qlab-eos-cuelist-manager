@@ -26,13 +26,23 @@ final class AppSettings: ObservableObject {
     @Published var eosHost: String { didSet { defaults.set(eosHost, forKey: Key.eosHost) } }
     @Published var eosFraming: OSCTCPFraming { didSet { defaults.set(eosFraming.rawValue, forKey: Key.eosFraming) } }
     /// BSD name of the interface on the Eos network (e.g. "en7"). Empty means let macOS choose.
-    @Published var eosInterfaceName: String { didSet { defaults.set(eosInterfaceName, forKey: Key.eosInterfaceName) } }
+    /// Until the user picks one, this follows the default (see `applyDefaultEosInterface`) and isn't saved.
+    @Published var eosInterfaceName: String {
+        didSet {
+            guard !applyingDefaultInterface else { return }
+            defaults.set(eosInterfaceName, forKey: Key.eosInterfaceName)
+            eosInterfaceChosen = true
+        }
+    }
+    /// True once the user has picked an interface in Settings (including Automatic).
+    @Published private(set) var eosInterfaceChosen: Bool
+    private var applyingDefaultInterface = false
     /// The Eos cue list to keep in sync, exactly as typed. Deliberately has no default.
     @Published var eosCueListText: String { didSet { defaults.set(eosCueListText, forKey: Key.eosCueList) } }
 
     /// Command line used to create a blank cue; {list} and {cue} are filled in.
     @Published var eosAddTemplate: String { didSet { defaults.set(eosAddTemplate, forKey: Key.eosAddTemplate) } }
-    /// Optional Eos user number to send commands as. Empty = the console's current user.
+    /// Eos user number to send commands as (default 61). Empty = the console's current user.
     @Published var eosUserText: String { didSet { defaults.set(eosUserText, forKey: Key.eosUser) } }
 
     /// The Eos user to send as: .some(nil) for the current user, nil if what was typed is invalid.
@@ -51,8 +61,26 @@ final class AppSettings: ObservableObject {
         eosHost = defaults.string(forKey: Key.eosHost) ?? ""
         eosFraming = OSCTCPFraming(rawValue: defaults.string(forKey: Key.eosFraming) ?? "") ?? .slip
         eosInterfaceName = defaults.string(forKey: Key.eosInterfaceName) ?? ""
+        eosInterfaceChosen = defaults.object(forKey: Key.eosInterfaceName) != nil
         eosCueListText = defaults.string(forKey: Key.eosCueList) ?? ""
         eosAddTemplate = defaults.string(forKey: Key.eosAddTemplate) ?? EosCommandBuilder.defaultAddTemplate
-        eosUserText = defaults.string(forKey: Key.eosUser) ?? ""
+        eosUserText = defaults.string(forKey: Key.eosUser) ?? String(EosDefaults.user)
+    }
+
+    /// Uses `name` as the Eos interface if the user hasn't picked one. Returns true if it changed.
+    /// Not saved, so the default keeps following whichever interface is on 10.101.x.x.
+    @discardableResult
+    func applyDefaultEosInterface(_ name: String) -> Bool {
+        guard !eosInterfaceChosen, name != eosInterfaceName else { return false }
+        applyingDefaultInterface = true
+        eosInterfaceName = name
+        applyingDefaultInterface = false
+        return true
+    }
+
+    /// Forgets the user's interface choice, so the default applies again.
+    func clearEosInterfaceChoice() {
+        defaults.removeObject(forKey: Key.eosInterfaceName)
+        eosInterfaceChosen = false
     }
 }
