@@ -90,6 +90,10 @@ final class EosParsingTests: XCTestCase {
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/show/name", [.string("Hamlet")])), .showName("Hamlet"))
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/show/loaded")), .showReset)
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/ping")), .ping)
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/cmd", [.string("LIVE: Cue 1/5 Time 0 #")])),
+                       .commandLine(user: nil, text: "LIVE: Cue 1/5 Time 0 #"))
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/user/61/cmd", [.string("LIVE: Error: x")])),
+                       .commandLine(user: 61, text: "LIVE: Error: x"))
         XCTAssertEqual(EosOutput.parse(OSCMessage("/qlab/whatever")), .other)
     }
 

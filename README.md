@@ -41,18 +41,22 @@ the exact command lines that will be sent. Press **Approve** to send that one ch
 to hide it for now. After sending, the app re-reads the Eos list; if Eos still differs after
 6 seconds the card says so and offers **Try again**.
 
-| Change | Command lines sent (`/eos/newcmd`) |
+| Change | What is sent |
 | --- | --- |
-| Add | `Record Only Cue 5/12#`, then `Cue 5/12 Time 0#`, then `Cue 5/12 Label %1#` with the QLab name |
-| Edit | `Cue 5/12 Label %1#` with the QLab name |
-| Delete | `Delete Cue 5/12 Enter Enter` |
+| Add | `Record Only Cue 5/12#`, then `Cue 5/12 Time 0#` (both with `/eos/newcmd`), then the label as below |
+| Edit | `/eos/set/cue/5/12/label` with the QLab name as a string |
+| Delete | `Delete Cue 5/12 Enter Enter` (with `/eos/newcmd`) |
 
 New cues must be blank. Record Only stores only manual data, so with nothing manual on stage the
 cue is empty. **Check this on Nomad before using it on a show**, and if your console needs a
 different command, change "Command to add a blank cue" in Settings (`{list}` and `{cue}` are filled in).
 
-Labels are sent as OSC arguments (`%1`), so words like "Enter" or "Time" in a QLab name are
-treated as text, not keys.
+Labels are set with Eos's `/eos/set/cue/.../label` message rather than typed on the command line,
+so any text in a QLab name is safe.
+
+While a change is being sent, every message sent and every line Eos's command line shows is
+written to the Connection log. If Eos still differs after 6 seconds, the Action log entry includes
+what Eos's command line said, which usually explains why (for example an error from Eos).
 
 "Send as Eos user" (default 61) sends commands as that Eos user number, so the operator's own
 command line isn't touched. Empty uses the console's current user.

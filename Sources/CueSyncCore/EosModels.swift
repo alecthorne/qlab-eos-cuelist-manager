@@ -59,6 +59,9 @@ public enum EosOutput: Equatable {
     case showName(String)
     /// A show was loaded or cleared; re-read everything.
     case showReset
+    /// The text on an Eos command line, e.g. "LIVE: Cue 1/5 Time 0 #".
+    /// `user` is nil for `/eos/out/cmd` and the user number for `/eos/out/user/<n>/cmd`.
+    case commandLine(user: Int?, text: String)
     case ping
     case other
 
@@ -71,6 +74,17 @@ public enum EosOutput: Equatable {
         switch rest.first ?? "" {
         case "ping":
             return .ping
+
+        case "cmd":
+            if rest.count == 1 { return .commandLine(user: nil, text: args.first?.stringValue ?? "") }
+            return .other
+
+        case "user":
+            // /eos/out/user/<n>/cmd
+            if rest.count == 3, rest[2] == "cmd", let user = Int(rest[1]) {
+                return .commandLine(user: user, text: args.first?.stringValue ?? "")
+            }
+            return .other
 
         case "get":
             if rest == ["get", "version"], let version = args.first?.stringValue {

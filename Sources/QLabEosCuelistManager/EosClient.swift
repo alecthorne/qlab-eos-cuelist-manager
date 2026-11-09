@@ -49,6 +49,13 @@ final class EosClient: ObservableObject {
     private var heartbeat: Timer?
     private var lastMessageAt = Date()
 
+    /// While changes are being sent, Eos command line text is written to the connection log
+    /// and kept here, so a failed change shows what Eos said.
+    private var watchCommandLineUntil = Date.distantPast
+    private var lastLoggedCommandLine = ""
+    /// The command line texts Eos reported since the last `send`, oldest first.
+    private(set) var commandLineSinceSend: [String] = []
+
     private var expectedCueCount = 0
     private var fetchedCues: [Int: EosCue] = [:]
 
@@ -100,8 +107,14 @@ final class EosClient: ObservableObject {
     @discardableResult
     func send(_ commands: [EosCommand], user: Int?) -> Bool {
         guard status == .connected, let connection else { return false }
+        watchCommandLineUntil = Date().addingTimeInterval(10)
+        commandLineSinceSend = []
+        lastLoggedCommandLine = ""
         for command in commands {
-            connection.send(command.message(user: user))
+            let message = command.message(user: user)
+            let arguments = message.arguments.compactMap(\.stringValue).map { "“" + $0 + "”" }
+            log.add("Eos", "Sent " + ([message.address] + arguments).joined(separator: " "))
+            connection.send(message)
         }
         return true
     }
@@ -233,6 +246,12 @@ final class EosClient: ObservableObject {
             if text.isEmpty { activeCue = nil }
         case .pendingCueText(let text):
             pendingCueText = text
+        case .commandLine(let user, let text):
+            guard Date() < watchCommandLineUntil, !text.isEmpty, text != lastLoggedCommandLine else { return }
+            lastLoggedCommandLine = text
+            commandLineSinceSend.append(text)
+            let who = user.map { "user \($0) " } ?? ""
+            log.add("Eos", "Eos \(who)command line: \(text)")
         case .pendingCue, .ping, .other:
             break
         }
