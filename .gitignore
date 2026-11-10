@@ -7,3 +7,7 @@ DerivedData/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 Package.resolved
 build/
+
+# QLab automatic backups and Finder custom-icon files
+*.qlab5backup
+Icon
