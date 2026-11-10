@@ -35,6 +35,14 @@ public enum EosRequest {
     /// Ask Eos to send `/eos/out/notify/...` when show data changes.
     public static let subscribe = OSCMessage("/eos/subscribe", [.int(1)])
 
+    /// How many cue lists the show has.
+    public static let cueListCount = OSCMessage("/eos/get/cuelist/count")
+
+    /// Request the cue list at a 0-based position in the show's cue lists.
+    public static func cueList(index: Int) -> OSCMessage {
+        OSCMessage("/eos/get/cuelist/index/\(index)")
+    }
+
     public static func cueCount(list: Int) -> OSCMessage {
         OSCMessage("/eos/get/cue/\(list)/count")
     }
@@ -48,6 +56,12 @@ public enum EosRequest {
 /// An OSC message from Eos that this app cares about.
 public enum EosOutput: Equatable {
     case cueCount(list: Int, count: Int)
+    /// How many cue lists the show has.
+    case cueListCount(Int)
+    /// One of the show's cue lists, at a 0-based position.
+    case cueList(number: Int, index: Int, label: String)
+    /// The show's cue lists changed; re-read them.
+    case cueListsChanged
     case cue(EosCue)
     /// Show data for this cue list changed; re-read it.
     case cueListChanged(list: Int)
@@ -90,6 +104,17 @@ public enum EosOutput: Equatable {
             if rest == ["get", "version"], let version = args.first?.stringValue {
                 return .version(version)
             }
+            // /eos/out/get/cuelist/count = <count>
+            if rest == ["get", "cuelist", "count"], let count = args.first?.intValue {
+                return .cueListCount(count)
+            }
+            // /eos/out/get/cuelist/<list>/list/<offset>/<argument count>
+            // args: 0 index, 1 uid, 2 label, ... (offset 0 only, as for cues; "links" replies ignored)
+            if rest.count == 6, rest[1] == "cuelist", rest[3] == "list", rest[4] == "0",
+               let number = Int(rest[2]), let index = args.first?.intValue {
+                return .cueList(number: number, index: index,
+                                label: args.count > 2 ? (args[2].stringValue ?? "") : "")
+            }
             // /eos/out/get/cue/<list>/count = <count>
             if rest.count == 4, rest[1] == "cue", rest[3] == "count",
                let list = Int(rest[2]), let count = args.first?.intValue {
@@ -117,6 +142,10 @@ public enum EosOutput: Equatable {
             return .other
 
         case "notify":
+            // /eos/out/notify/cuelist/...
+            if rest.count >= 2, rest[1] == "cuelist" {
+                return .cueListsChanged
+            }
             // /eos/out/notify/cue/<list>/...
             if rest.count >= 3, rest[1] == "cue", let list = Int(rest[2]) {
                 return .cueListChanged(list: list)

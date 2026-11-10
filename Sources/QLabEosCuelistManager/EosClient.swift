@@ -36,6 +36,8 @@ final class EosClient: ObservableObject {
     @Published private(set) var isLoadingCues = false
     /// True once the chosen cue list has been read completely at least once.
     @Published private(set) var cuesLoaded = false
+    /// The show's cue lists (number → label), or nil until they've been read.
+    @Published private(set) var consoleCueLists: [Int: String]?
     @Published private(set) var activeCue: EosCueRef?
     @Published private(set) var activeCueText = ""
     @Published private(set) var pendingCueText = ""
@@ -56,6 +58,9 @@ final class EosClient: ObservableObject {
     private var lastLoggedCommandLine = ""
     private var commandLineHistory: [(date: Date, text: String)] = []
     private let commandLineHistoryLimit = 200
+
+    private var expectedCueListCount = 0
+    private var fetchedCueLists: [Int: (number: Int, label: String)] = [:]
 
     private var expectedCueCount = 0
     /// Replies so far, keyed by position and part so that the parts of a multipart cue
@@ -88,6 +93,7 @@ final class EosClient: ObservableObject {
         version = ""
         showName = ""
         clearCues()
+        consoleCueLists = nil
         activeCue = nil
         activeCueText = ""
         pendingCueText = ""
@@ -106,6 +112,12 @@ final class EosClient: ObservableObject {
         guard status == .connected, let cueList else { return }
         isLoadingCues = true
         connection?.send(EosRequest.cueCount(list: cueList))
+    }
+
+    /// Re-reads which cue lists exist on the console.
+    func refreshCueLists() {
+        guard status == .connected else { return }
+        connection?.send(EosRequest.cueListCount)
     }
 
     /// Sends command lines to Eos, in order. Returns false if not connected.
@@ -172,6 +184,7 @@ final class EosClient: ObservableObject {
             connection?.send(EosRequest.version)
             connection?.send(EosRequest.subscribe)
             refreshCues()
+            refreshCueLists()
             startHeartbeat()
         case .failed(let reason):
             connectionLost(reason)
@@ -189,6 +202,7 @@ final class EosClient: ObservableObject {
         status = .error(reason)
         isLoadingCues = false
         cuesLoaded = false
+        consoleCueLists = nil
         scheduleReconnect()
     }
 
@@ -230,6 +244,25 @@ final class EosClient: ObservableObject {
             scheduleRefresh()
         case .cueListChanged(let list):
             if list == cueList { scheduleRefresh() }
+        case .cueListsChanged:
+            scheduleRefresh()
+        case .cueListCount(let count):
+            expectedCueListCount = count
+            fetchedCueLists = [:]
+            if count == 0 {
+                consoleCueLists = [:]
+            } else {
+                for index in 0..<count {
+                    connection?.send(EosRequest.cueList(index: index))
+                }
+            }
+        case .cueList(let number, let index, let label):
+            guard index < expectedCueListCount else { return }
+            fetchedCueLists[index] = (number, label)
+            if fetchedCueLists.count >= expectedCueListCount {
+                consoleCueLists = Dictionary(fetchedCueLists.values.map { ($0.number, $0.label) },
+                                             uniquingKeysWith: { first, _ in first })
+            }
         case .cueCount(let list, let count):
             guard list == cueList else { return }
             expectedCueCount = count
@@ -276,7 +309,10 @@ final class EosClient: ObservableObject {
 
     private func scheduleRefresh() {
         refreshWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in self?.refreshCues() }
+        let work = DispatchWorkItem { [weak self] in
+            self?.refreshCues()
+            self?.refreshCueLists()
+        }
         refreshWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
     }
