@@ -48,7 +48,7 @@ public enum EosRequest {
 /// An OSC message from Eos that this app cares about.
 public enum EosOutput: Equatable {
     case cueCount(list: Int, count: Int)
-    case cue(EosCue, listCount: Int)
+    case cue(EosCue)
     /// Show data for this cue list changed; re-read it.
     case cueListChanged(list: Int)
     case activeCue(list: Int, number: String, progress: Double)
@@ -95,12 +95,14 @@ public enum EosOutput: Equatable {
                let list = Int(rest[2]), let count = args.first?.intValue {
                 return .cueCount(list: list, count: count)
             }
-            // /eos/out/get/cue/<list>/<cue>/<part>/list/<index>/<count>
-            // args: 0 index, 1 uid, 2 label, 3 up time (ms), ...
+            // /eos/out/get/cue/<list>/<cue>/<part>/list/<offset>/<argument count>
+            // args: 0 index (position in the cue list), 1 uid, 2 label, 3 up time (ms), ...
+            // The trailing pair describes the argument list, not the cue list: <offset> is the
+            // first argument carried by this message. Only offset 0 has the fields read here.
             // Eos sends extra replies with fx/links/actions before "list"; those are ignored.
-            if rest.count == 8, rest[1] == "cue", rest[5] == "list",
+            if rest.count == 8, rest[1] == "cue", rest[5] == "list", rest[6] == "0",
                let list = Int(rest[2]), let part = Int(rest[4]),
-               let index = Int(rest[6]), let count = Int(rest[7]) {
+               let index = args.first?.intValue {
                 let cue = EosCue(
                     list: list,
                     number: rest[3],
@@ -110,7 +112,7 @@ public enum EosOutput: Equatable {
                     label: args.count > 2 ? (args[2].stringValue ?? "") : "",
                     upTimeMs: args.count > 3 ? args[3].intValue : nil
                 )
-                return .cue(cue, listCount: count)
+                return .cue(cue)
             }
             return .other
 

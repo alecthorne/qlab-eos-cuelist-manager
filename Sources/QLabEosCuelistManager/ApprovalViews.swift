@@ -7,10 +7,13 @@ struct ApprovalPanel: View {
     @EnvironmentObject private var controller: ChangeController
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var eos: EosClient
+    @State private var confirmingApproveAll = false
 
     var body: some View {
         let visible = changes.filter { !controller.skipped.contains($0.id) }
         let skippedCount = changes.count - visible.count
+        let sendable = visible.filter(controller.canSend)
+        let labelEdits = sendable.filter { $0.kind == .updateLabel }
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("Changes to approve").font(.headline)
@@ -19,6 +22,16 @@ struct ApprovalPanel: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
+
+            HStack {
+                Button("Approve All") { confirmingApproveAll = true }
+                    .disabled(sendable.isEmpty || controller.blockedReason != nil)
+                Button("Update Eos Cue Labels") { controller.approve(labelEdits) }
+                    .disabled(labelEdits.isEmpty || controller.blockedReason != nil)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.bottom, 6)
 
             if let reason = controller.blockedReason {
                 Text(reason)
@@ -60,6 +73,31 @@ struct ApprovalPanel: View {
         .onChange(of: changes) { newValue in
             controller.prune(current: newValue)
         }
+        .confirmationDialog(
+            "Send \(sendable.count) change\(sendable.count == 1 ? "" : "s") to Eos?",
+            isPresented: $confirmingApproveAll
+        ) {
+            Button("Approve All", role: sendable.contains { $0.kind == .delete } ? .destructive : nil) {
+                controller.approve(sendable)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(Self.breakdown(of: sendable) + " Skipped changes are not sent.")
+        }
+    }
+
+    /// E.g. "2 adds, 1 label edit, 3 deletes."
+    private static func breakdown(of changes: [EosChange]) -> String {
+        let kinds: [(EosChange.Kind, String, String)] = [
+            (.add, "add", "adds"),
+            (.updateLabel, "label edit", "label edits"),
+            (.delete, "delete", "deletes"),
+        ]
+        let parts = kinds.compactMap { kind, singular, plural -> String? in
+            let count = changes.filter { $0.kind == kind }.count
+            return count == 0 ? nil : "\(count) \(count == 1 ? singular : plural)"
+        }
+        return parts.joined(separator: ", ") + "."
     }
 }
 
@@ -96,6 +134,9 @@ struct ChangeCard: View {
 
             HStack {
                 switch state {
+                case .some(.queued):
+                    ProgressView().controlSize(.small)
+                    Text("Queued…").foregroundStyle(.secondary)
                 case .some(.sent):
                     ProgressView().controlSize(.small)
                     Text("Sent, waiting for Eos…").foregroundStyle(.secondary)
@@ -108,11 +149,11 @@ struct ChangeCard: View {
                 }
                 Spacer()
                 Button("Skip") { controller.skip(change) }
-                    .disabled(state == .sent)
+                    .disabled(!controller.canSend(change))
                 Button(state == .notConfirmed ? "Try again" : "Approve") { controller.approve(change) }
                     .buttonStyle(.borderedProminent)
                     .tint(change.kind == .delete ? Color.red : Color.accentColor)
-                    .disabled(state == .sent || controller.blockedReason != nil)
+                    .disabled(!controller.canSend(change) || controller.blockedReason != nil)
             }
         }
         .padding(10)
@@ -137,8 +178,6 @@ struct ActionLogPane: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("Action log").font(.headline)
-                Text("\(actionLog.log.lines.count) of \(actionLog.log.capacity) lines")
-                    .foregroundStyle(.secondary)
                 Spacer()
                 Button("Copy all") { actionLog.copyToPasteboard() }
                     .disabled(actionLog.log.lines.isEmpty)

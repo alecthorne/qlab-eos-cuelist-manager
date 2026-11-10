@@ -50,14 +50,19 @@ final class EosClient: ObservableObject {
     private var lastMessageAt = Date()
 
     /// While changes are being sent, Eos command line text is written to the connection log
-    /// and kept here, so a failed change shows what Eos said.
+    /// and kept here with the time it arrived, so each failed change can show what Eos said
+    /// in response to it.
     private var watchCommandLineUntil = Date.distantPast
     private var lastLoggedCommandLine = ""
-    /// The command line texts Eos reported since the last `send`, oldest first.
-    private(set) var commandLineSinceSend: [String] = []
+    private var commandLineHistory: [(date: Date, text: String)] = []
+    private let commandLineHistoryLimit = 200
 
     private var expectedCueCount = 0
-    private var fetchedCues: [Int: EosCue] = [:]
+    /// Replies so far, keyed by position and part so that the parts of a multipart cue
+    /// never overwrite each other or the cue itself.
+    private var fetchedCues: [EosCueSlot: EosCue] = [:]
+    /// Positions (0..<expectedCueCount) that Eos has replied for.
+    private var fetchedIndices: Set<Int> = []
 
     init(log: ConnectionLog, interfaceLookup: @escaping (String) -> NWInterface?) {
         self.log = log
@@ -107,8 +112,7 @@ final class EosClient: ObservableObject {
     @discardableResult
     func send(_ commands: [EosCommand], user: Int?) -> Bool {
         guard status == .connected, let connection else { return false }
-        watchCommandLineUntil = Date().addingTimeInterval(10)
-        commandLineSinceSend = []
+        watchCommandLineUntil = max(watchCommandLineUntil, Date().addingTimeInterval(10))
         lastLoggedCommandLine = ""
         for command in commands {
             let message = command.message(user: user)
@@ -117,6 +121,14 @@ final class EosClient: ObservableObject {
             connection.send(message)
         }
         return true
+    }
+
+    /// Command line texts Eos reported from `start` up to (not including) `end`, oldest first.
+    /// `end` nil means up to now.
+    func commandLineTexts(from start: Date, to end: Date?) -> [String] {
+        commandLineHistory
+            .filter { entry in entry.date >= start && (end.map { entry.date < $0 } ?? true) }
+            .map(\.text)
     }
 
     // MARK: - Connection
@@ -222,6 +234,7 @@ final class EosClient: ObservableObject {
             guard list == cueList else { return }
             expectedCueCount = count
             fetchedCues = [:]
+            fetchedIndices = []
             if count == 0 {
                 cues = []
                 isLoadingCues = false
@@ -231,11 +244,12 @@ final class EosClient: ObservableObject {
                     connection?.send(EosRequest.cue(list: list, index: index))
                 }
             }
-        case .cue(let cue, _):
+        case .cue(let cue):
             guard cue.list == cueList, isLoadingCues else { return }
-            fetchedCues[cue.index] = cue
-            if fetchedCues.count >= expectedCueCount {
-                cues = fetchedCues.values.sorted { $0.index < $1.index }
+            fetchedCues[EosCueSlot(index: cue.index, part: cue.part)] = cue
+            fetchedIndices.insert(cue.index)
+            if fetchedIndices.count >= expectedCueCount {
+                cues = fetchedCues.values.sorted { ($0.index, $0.part) < ($1.index, $1.part) }
                 isLoadingCues = false
                 cuesLoaded = true
             }
@@ -249,7 +263,10 @@ final class EosClient: ObservableObject {
         case .commandLine(let user, let text):
             guard Date() < watchCommandLineUntil, !text.isEmpty, text != lastLoggedCommandLine else { return }
             lastLoggedCommandLine = text
-            commandLineSinceSend.append(text)
+            commandLineHistory.append((Date(), text))
+            if commandLineHistory.count > commandLineHistoryLimit {
+                commandLineHistory.removeFirst(commandLineHistory.count - commandLineHistoryLimit)
+            }
             let who = user.map { "user \($0) " } ?? ""
             log.add("Eos", "Eos \(who)command line: \(text)")
         case .pendingCue, .ping, .other:
@@ -267,8 +284,14 @@ final class EosClient: ObservableObject {
     private func clearCues() {
         cues = []
         fetchedCues = [:]
+        fetchedIndices = []
         expectedCueCount = 0
         isLoadingCues = false
         cuesLoaded = false
     }
+}
+
+private struct EosCueSlot: Hashable {
+    let index: Int
+    let part: Int
 }

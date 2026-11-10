@@ -27,7 +27,7 @@ Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of t
 | Label differs | Cue exists in both, label is different | Update the Eos label |
 | Missing in Eos | QLab has the number, Eos doesn't | Add the cue in Eos |
 | Not in QLab | Eos has the number, QLab doesn't | Delete the cue in Eos |
-| Not an Eos number | QLab number like "1A" or "Pre" that Eos can't use | Nothing: renumber it in QLab |
+| Not a valid Eos cue # | QLab number like "1A" or "Pre" that Eos can't use | Nothing: renumber it in QLab |
 | Duplicate number | Two QLab cues map to the same Eos number | Nothing: fix it in QLab |
 
 The QLab name used is the one shown in QLab's cue list, so a cue with no name uses QLab's default
