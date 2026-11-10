@@ -170,25 +170,17 @@ struct ChangeCard: View {
     }
 }
 
-/// The add/edit/delete history, newest first (500 lines kept).
-struct ActionLogPane: View {
+/// The add/edit/delete history, newest first (500 lines kept), in a panel above the
+/// connection log. Starts collapsed each time the app opens.
+struct ActionLogSection: View {
     @EnvironmentObject private var actionLog: ActionLog
+    @State private var expanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Action log").font(.headline)
-                Spacer()
-                Button("Copy all") { actionLog.copyToPasteboard() }
-                    .disabled(actionLog.log.lines.isEmpty)
-                Button("Clear") { actionLog.clear() }
-                    .disabled(actionLog.log.lines.isEmpty)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-
+        DisclosureGroup(isExpanded: $expanded) {
             if actionLog.log.lines.isEmpty {
                 Placeholder(text: "No changes sent to Eos yet.")
+                    .frame(height: 160)
             } else {
                 Table(Array(actionLog.log.lines.reversed())) {
                     TableColumn("Time") { entry in
@@ -207,7 +199,20 @@ struct ActionLogPane: View {
                             .textSelection(.enabled)
                     }
                 }
+                .frame(height: 160)
             }
+        } label: {
+            HStack {
+                Text("Action log")
+                Spacer()
+                Button("Copy all") { actionLog.copyToPasteboard() }
+                    .disabled(actionLog.log.lines.isEmpty)
+                Button("Clear") { actionLog.clear() }
+                    .disabled(actionLog.log.lines.isEmpty)
+            }
+            .buttonStyle(.borderless)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
     }
 }

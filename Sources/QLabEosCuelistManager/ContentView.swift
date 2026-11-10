@@ -7,14 +7,6 @@ struct ContentView: View {
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var eos: EosClient
     @State private var showingSettings = false
-    @State private var tab: Tab = .compare
-
-    enum Tab: String, CaseIterable, Identifiable {
-        case compare = "Compare"
-        case actions = "Action log"
-        case connection = "Connection log"
-        var id: String { rawValue }
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,24 +21,13 @@ struct ContentView: View {
                        buttonTitle: "Open Settings") { showingSettings = true }
             }
 
-            Picker("View", selection: $tab) {
-                ForEach(Tab.allCases) { tab in
-                    Text(tab.rawValue).tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 520)
-            .padding(.vertical, 8)
+            ComparisonPane()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            Group {
-                switch tab {
-                case .compare: ComparisonPane()
-                case .actions: ActionLogPane()
-                case .connection: ConnectionLogPane()
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Divider()
+            ActionLogSection()
+            Divider()
+            ConnectionLogSection()
         }
         .toolbar {
             ToolbarItemGroup {
@@ -192,8 +173,11 @@ struct Banner: View {
 
 // MARK: - Log
 
-struct ConnectionLogPane: View {
+/// Connection events, newest first, in a panel at the bottom of the window.
+/// Starts collapsed each time the app opens.
+struct ConnectionLogSection: View {
     @EnvironmentObject private var log: ConnectionLog
+    @State private var expanded = false
 
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -202,18 +186,10 @@ struct ConnectionLogPane: View {
     }()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Connection log").font(.headline)
-                Spacer()
-                Button("Clear") { log.clear() }
-                    .disabled(log.log.lines.isEmpty)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-
+        DisclosureGroup(isExpanded: $expanded) {
             if log.log.lines.isEmpty {
                 Placeholder(text: "No connection events yet.")
+                    .frame(height: 120)
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 2) {
@@ -224,9 +200,20 @@ struct ConnectionLogPane: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 4)
                 }
+                .frame(height: 120)
+            }
+        } label: {
+            HStack {
+                Text("Connection log")
+                Spacer()
+                Button("Clear") { log.clear() }
+                    .buttonStyle(.borderless)
+                    .disabled(log.log.lines.isEmpty)
             }
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
     }
 }

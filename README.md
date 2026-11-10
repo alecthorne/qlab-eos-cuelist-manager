@@ -32,7 +32,6 @@ Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of t
 
 The QLab name used is the one shown in QLab's cue list, so a cue with no name uses QLab's default
 name. Eos cue parts are not compared. Eos numbers may have up to 4 decimal places.
-The "Eos cue list" and "QLab cues" tabs show each side on its own.
 
 ## Approving changes
 
@@ -61,8 +60,10 @@ what Eos's command line said, which usually explains why (for example an error f
 "Send as Eos user" (default 61) sends commands as that Eos user number, so the operator's own
 command line isn't touched. Empty uses the console's current user.
 
-Every change sent is written to the **Action log** tab (newest 500 lines), with the time, the
+Every change sent is written to the **Action log** (newest 500 lines), with the time, the
 change, the commands sent and whether Eos confirmed it. "Copy all" copies the log as text.
+The Action log and Connection log are collapsible panels at the bottom of the window; both
+start collapsed when the app opens.
 
 ## Build and run
 
