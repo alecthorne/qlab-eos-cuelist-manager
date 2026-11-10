@@ -37,17 +37,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		000000000000000000000010 /* QLabEosCuelistManager */ = {
+		000000000000000000000010 /* Sources/QLabEosCuelistManager */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Sources/QLabEosCuelistManager;
 			sourceTree = "<group>";
 		};
-		000000000000000000000011 /* CueSyncCore */ = {
+		000000000000000000000011 /* Sources/CueSyncCore */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Sources/CueSyncCore;
 			sourceTree = "<group>";
 		};
-		000000000000000000000012 /* CueSyncCoreTests */ = {
+		000000000000000000000012 /* Tests/CueSyncCoreTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Tests/CueSyncCoreTests;
 			sourceTree = "<group>";
@@ -80,9 +80,9 @@
 			children = (
 				000000000000000000000140 /* README.md */,
 				000000000000000000000141 /* Package.swift */,
-				000000000000000000000010 /* QLabEosCuelistManager */,
-				000000000000000000000011 /* CueSyncCore */,
-				000000000000000000000012 /* CueSyncCoreTests */,
+				000000000000000000000010 /* Sources/QLabEosCuelistManager */,
+				000000000000000000000011 /* Sources/CueSyncCore */,
+				000000000000000000000012 /* Tests/CueSyncCoreTests */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -114,7 +114,7 @@
 				000000000000000150000000 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				000000000000000000000010 /* QLabEosCuelistManager */,
+				000000000000000000000010 /* Sources/QLabEosCuelistManager */,
 			);
 			name = QLabEosCuelistManager;
 			productName = QLabEosCuelistManager;
@@ -130,10 +130,8 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
-				000000000000000000000011 /* CueSyncCore */,
+				000000000000000000000011 /* Sources/CueSyncCore */,
 			);
 			name = CueSyncCore;
 			productName = CueSyncCore;
@@ -153,7 +151,7 @@
 				000000000000000350000000 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				000000000000000000000012 /* CueSyncCoreTests */,
+				000000000000000000000012 /* Tests/CueSyncCoreTests */,
 			);
 			name = CueSyncCoreTests;
 			productName = CueSyncCoreTests;
@@ -265,23 +263,23 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -308,16 +306,16 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
