@@ -58,6 +58,9 @@ the real QLab and Eos.
 - [ ] Now bring up some channels manually in Nomad (manual data on stage), then approve **Add cue 5/2.5**.
   Check whether cue 5/2.5 picked up those levels. **If it did, Record Only isn't safe with manual data on stage**: note it, and either clear manual data before syncing or change "Command to add a blank cue" in Settings to a command that's blank in every case.
 - [ ] Approve **Add cue 5/3**: its Eos label is QLab's default name for that cue.
+- [ ] In Settings, choose an Eos cue list that doesn't exist in Nomad (e.g. 50). The header says **Cuelist not found in console** in red.
+  Approve one Add: a dialog says cue list 50 will be created. **Cancel** sends nothing. Approve again and choose **Create Cue List**: the cue is added, list 50 now exists in Nomad, and the header shows it. Further adds don't ask again.
+- [ ] With list 50 deleted again in Nomad, **Approve All** mentions the new cue list in its own confirmation and doesn't ask a second time.
 
 ## 4. Editing and deleting
 

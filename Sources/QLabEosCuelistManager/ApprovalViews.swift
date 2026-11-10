@@ -78,12 +78,31 @@ struct ApprovalPanel: View {
             isPresented: $confirmingApproveAll
         ) {
             Button("Approve All", role: sendable.contains { $0.kind == .delete } ? .destructive : nil) {
-                controller.approve(sendable)
+                // This dialog already warns about a new cue list, so don't ask a second time.
+                controller.approve(sendable, newCueListConfirmed: true)
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(Self.breakdown(of: sendable) + " Skipped changes are not sent.")
+            Text(Self.breakdown(of: sendable) + " Skipped changes are not sent."
+                + (controller.wouldCreateCueList(sendable) ? " " + Self.newCueListWarning(controller.cueListToCreate) : ""))
         }
+        .alert(
+            "Create a new Eos cue list?",
+            isPresented: Binding(
+                get: { controller.pendingNewCueListApproval != nil },
+                set: { if !$0 { controller.cancelNewCueList() } }
+            )
+        ) {
+            Button("Create Cue List") { controller.confirmNewCueList() }
+            Button("Cancel", role: .cancel) { controller.cancelNewCueList() }
+        } message: {
+            Text(Self.newCueListWarning(controller.cueListToCreate))
+        }
+    }
+
+    private static func newCueListWarning(_ list: Int?) -> String {
+        let name = list.map { "Cue list \($0)" } ?? "The chosen cue list"
+        return "\(name) doesn't exist on the console. Adding cues to it will create it as a new cue list."
     }
 
     /// E.g. "2 adds, 1 label edit, 3 deletes."

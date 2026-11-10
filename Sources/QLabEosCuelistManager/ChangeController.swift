@@ -69,6 +69,10 @@ final class ChangeController: ObservableObject {
     @Published private(set) var states: [String: State] = [:]
     @Published private(set) var skipped: Set<String> = []
     @Published private(set) var lastError: String?
+    /// Changes waiting for the user to confirm that a new Eos cue list will be created.
+    @Published private(set) var pendingNewCueListApproval: [EosChange]?
+    /// The cue list the user has already agreed to create, so they're only asked once.
+    private var confirmedNewCueList: Int?
 
     private let actionLog: ActionLog
     private let settings: AppSettings
@@ -107,10 +111,35 @@ final class ChangeController: ObservableObject {
         approve([change])
     }
 
+    /// The chosen Eos cue list's number when the console is known not to have it yet,
+    /// so adding a cue will create it. nil if it exists, isn't known yet, or was confirmed.
+    var cueListToCreate: Int? {
+        guard let list = settings.eosCueList, let lists = eos.consoleCueLists,
+              lists[list] == nil, confirmedNewCueList != list else { return nil }
+        return list
+    }
+
+    /// Whether sending these changes would create the Eos cue list (only adds can).
+    func wouldCreateCueList(_ changes: [EosChange]) -> Bool {
+        cueListToCreate != nil && changes.contains { $0.kind == .add && canSend($0) }
+    }
+
+    /// The user agreed to create the new cue list: send the changes that were waiting.
+    func confirmNewCueList() {
+        guard let changes = pendingNewCueListApproval else { return }
+        pendingNewCueListApproval = nil
+        approve(changes, newCueListConfirmed: true)
+    }
+
+    func cancelNewCueList() {
+        pendingNewCueListApproval = nil
+    }
+
     /// Sends several changes in order, one every `batchSpacing` seconds, so that what Eos's
     /// command line says can be matched to the change that caused it. Changes already queued
-    /// or waiting for Eos are left alone.
-    func approve(_ changes: [EosChange]) {
+    /// or waiting for Eos are left alone. If this would create a new Eos cue list, nothing is
+    /// sent until the user confirms (`newCueListConfirmed` is true when they already have).
+    func approve(_ changes: [EosChange], newCueListConfirmed: Bool = false) {
         lastError = nil
         guard blockedReason == nil, settings.eosUser != nil else {
             lastError = blockedReason
@@ -118,6 +147,17 @@ final class ChangeController: ObservableObject {
         }
         let queue = changes.filter(canSend)
         guard !queue.isEmpty else { return }
+        // Once the list exists, forget the earlier answer so a later deletion asks again.
+        if let list = settings.eosCueList, eos.consoleCueLists?[list] != nil {
+            confirmedNewCueList = nil
+        }
+        if wouldCreateCueList(queue) {
+            guard newCueListConfirmed else {
+                pendingNewCueListApproval = queue
+                return
+            }
+            confirmedNewCueList = cueListToCreate
+        }
         queue.forEach { states[$0.id] = .queued }
         sendNext(queue[...], sent: [])
     }
