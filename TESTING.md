@@ -42,8 +42,8 @@ the real QLab and Eos.
 
 ## 2. Reading and comparing
 
-- [ ] Compare tab, with Eos list 5 empty: 1, 2, 2.5, 3 show **Missing in Eos**; 4A shows **Not an Eos number**; 6 and 6.0 show **Duplicate number**.
-- [ ] The Eos cue list tab is empty; the QLab cues tab lists all 7 cues in QLab order.
+- [ ] Compare view, with Eos list 5 empty: 1, 2, 2.5, 3 show **Missing in Eos**; 4A shows **Not a valid Eos cue #**; 6 and 6.0 show **Duplicate number**.
+- [ ] The Eos columns are empty; the QLab columns list all 7 cues in QLab order.
 - [ ] In Nomad, record cue 5/1 by hand with label "Preset": row 1 turns **Matches** within a couple of seconds.
 - [ ] In Nomad, record cue 5/9 by hand: a **Not in QLab** row appears for 9.
 - [ ] Rename QLab cue 2 to "Scene One": nothing changes for it yet (it's still missing in Eos). Rename QLab cue 1 to "Pre-show": row 1 turns **Label differs** within a second.
@@ -77,7 +77,8 @@ the real QLab and Eos.
 
 ## 6. Action log
 
-- [ ] Every approved change is in the Action log tab, newest first, with time, change, commands and result.
+- [ ] The Action log and Connection log panels at the bottom of the window are collapsed when the app opens.
+- [ ] Every approved change is in the Action log, newest first, with time, change, commands and result.
 - [ ] "Copy all" puts the log on the clipboard as text.
 - [ ] The log never shows more than 500 lines (shown as "n of 500 lines").
 
