@@ -11,6 +11,14 @@ public struct QLabReply {
 
     public var isOK: Bool { status == "ok" }
 
+    /// The permissions QLab granted in a `/connect` reply, e.g. "ok:view|edit|control" →
+    /// ["view", "edit", "control"]. "ok:" (nothing granted) gives an empty set. nil means the
+    /// reply didn't list permissions (older QLab versions reply just "ok").
+    public static func connectPermissions(_ result: String) -> Set<String>? {
+        guard let colon = result.firstIndex(of: ":") else { return nil }
+        return Set(result[result.index(after: colon)...].split(separator: "|").map { String($0) })
+    }
+
     public static func parse(_ message: OSCMessage) -> QLabReply? {
         guard message.address.hasPrefix("/reply"),
               let json = message.arguments.first?.stringValue,

@@ -133,6 +133,11 @@ final class QLabClient: ObservableObject {
             } else {
                 log.add("QLab", "Could not read cue lists (\(reply.status)). Check the workspace's OSC access settings.")
             }
+        } else if reply.address.hasSuffix("/updates"), !reply.isOK {
+            // QLab only answers /updates when it refuses; a refusal means edits stop arriving silently.
+            guard reply.workspaceID == nil || reply.workspaceID == connectedWorkspace?.id else { return }
+            log.add("QLab", "QLab refused live updates (\(reply.status)). Changes in QLab won't appear until you "
+                + "click Refresh. In QLab, check Workspace Settings → Network → OSC Access: the passcode needs View.")
         }
     }
 
@@ -185,6 +190,11 @@ final class QLabClient: ObservableObject {
         connectedWorkspace = workspace
         status = .connected
         log.add("QLab", "Opened workspace \(workspace.displayName)")
+        if let permissions = QLabReply.connectPermissions(result), !permissions.contains("view") {
+            log.add("QLab", "QLab connected without View permission, so cue lists and live updates will be refused. "
+                + "Enter a passcode with View permission in Settings, or allow View without a passcode in QLab's "
+                + "Workspace Settings → Network → OSC Access.")
+        }
         connection?.send(OSCMessage("/workspace/\(workspaceID)/updates", [.int(1)]))
         refreshCueLists()
     }
