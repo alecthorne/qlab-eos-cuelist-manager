@@ -42,13 +42,17 @@ to hide it for now. After sending, the app re-reads the Eos list; if Eos still d
 
 | Change | What is sent |
 | --- | --- |
-| Add | `Record Only Cue 5/12#`, then `Cue 5/12 Time 0#` (both with `/eos/newcmd`), then the label as below |
+| Add | `Record_Only Cue 5 / 12#`, then `Cue 5 / 12 Time 0#` (both with `/eos/newcmd`), then the label as below |
 | Edit | `/eos/set/cue/5/12/label` with the QLab name as a string |
-| Delete | `Delete Cue 5/12 Enter Enter` (with `/eos/newcmd`) |
+| Delete | `Delete Cue 5 / 12 Enter Enter` (with `/eos/newcmd`) |
 
 New cues must be blank. Record Only stores only manual data, so with nothing manual on stage the
 cue is empty. **Check this on Nomad before using it on a show**, and if your console needs a
 different command, change "Command to add a blank cue" in Settings (`{list}` and `{cue}` are filled in).
+
+Eos reads command text strictly. Write **`Record_Only`**: a separate "Only" is ignored, which makes a
+plain Record of everything on stage. And put **spaces around the `/`**: `Cue 5/12` is a syntax error,
+`Cue 5 / 12` works. The app fixes both in custom commands automatically.
 
 Labels are set with Eos's `/eos/set/cue/.../label` message rather than typed on the command line,
 so any text in a QLab name is safe.

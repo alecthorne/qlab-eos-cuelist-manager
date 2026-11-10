@@ -28,20 +28,32 @@ final class EosChangeTests: XCTestCase {
         let change = EosChange(kind: .add, list: 3, number: "12.5", label: "Scene 2", currentLabel: nil)
         let commands = EosCommandBuilder.commands(for: change)
         XCTAssertEqual(commands.map(\.displayText), [
-            "Record Only Cue 3/12.5#",
-            "Cue 3/12.5 Time 0#",
+            "Record_Only Cue 3 / 12.5#",
+            "Cue 3 / 12.5 Time 0#",
             "Set label of cue 3/12.5 to “Scene 2”",
         ])
-        XCTAssertEqual(commands[0].message(user: nil), OSCMessage("/eos/newcmd", [.string("Record Only Cue 3/12.5#")]))
+        XCTAssertEqual(commands[0].message(user: nil), OSCMessage("/eos/newcmd", [.string("Record_Only Cue 3 / 12.5#")]))
         // Labels go to /eos/set as a string, never typed on the command line, whatever the user setting.
         XCTAssertEqual(commands[2].message(user: 61),
                        OSCMessage("/eos/set/cue/3/12.5/label", [.string("Scene 2")]))
     }
 
+    func testAddTemplateIsWrittenTheWayEosReadsIt() {
+        // Checked on a real console: "Record Only" typed as text became a plain Record, and
+        // "Cue 16/1" was a syntax error; "Record_Only Cue 16 / 1#" made a Record Only cue.
+        XCTAssertEqual(EosCommandBuilder.normalizedAddTemplate("Record Only Cue {list}/{cue}#"),
+                       "Record_Only Cue {list} / {cue}#")
+        XCTAssertEqual(EosCommandBuilder.normalizedAddTemplate(EosCommandBuilder.defaultAddTemplate),
+                       EosCommandBuilder.defaultAddTemplate)
+        let change = EosChange(kind: .add, list: 16, number: "1", label: "", currentLabel: nil)
+        let old = EosCommandBuilder.commands(for: change, addTemplate: "Record Only Cue {list}/{cue}#")
+        XCTAssertEqual(old.first?.text, "Record_Only Cue 16 / 1#")
+    }
+
     func testCustomAddTemplate() {
         let change = EosChange(kind: .add, list: 1, number: "4", label: "X", currentLabel: nil)
         let commands = EosCommandBuilder.commands(for: change, addTemplate: "Blind Record Cue {list}/{cue}#")
-        XCTAssertEqual(commands.first?.text, "Blind Record Cue 1/4#")
+        XCTAssertEqual(commands.first?.text, "Blind Record Cue 1 / 4#")
     }
 
     func testEditAndDeleteCommands() {
@@ -54,7 +66,7 @@ final class EosChangeTests: XCTestCase {
                        [OSCMessage("/eos/set/cue/2/7/label", [.string("")])])
 
         let delete = EosChange(kind: .delete, list: 2, number: "7", label: "", currentLabel: "old")
-        XCTAssertEqual(EosCommandBuilder.commands(for: delete).map(\.text), ["Delete Cue 2/7 Enter Enter"])
+        XCTAssertEqual(EosCommandBuilder.commands(for: delete).map(\.text), ["Delete Cue 2 / 7 Enter Enter"])
         XCTAssertEqual(delete.summary, "Delete cue 2/7 “old”")
     }
 
