@@ -30,6 +30,10 @@ struct ContentView: View {
             ConnectionLogSection()
         }
         .toolbar {
+            ToolbarItem {
+                ActiveCueBox()
+            }
+            .hidingSharedBackground()
             ToolbarItemGroup {
                 Button {
                     qlab.refreshCueLists()
@@ -137,8 +141,6 @@ struct EosConnectionColumn: View {
                 .help(eos.version.isEmpty ? "" : "Eos v\(eos.version)")
             DetailLine(label: "Showfile:", value: eos.showName.isEmpty ? "—" : eos.showName)
             DetailLine(label: "Video Cuelist:", value: videoCueList.text, isError: videoCueList.isError)
-            DetailLine(label: "Active Cue:", value: eos.activeCueText.isEmpty ? "None" : eos.activeCueText,
-                       monospaced: true)
         }
     }
 
@@ -170,6 +172,39 @@ struct EosConnectionColumn: View {
     }
 }
 
+/// The Eos active cue, in a box in the window toolbar.
+struct ActiveCueBox: View {
+    @EnvironmentObject private var eos: EosClient
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("Active Cue:")
+                .foregroundStyle(.secondary)
+            Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
+                .font(.system(.body, design: .monospaced))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.35)))
+        .help("The cue Eos is currently playing back")
+    }
+}
+
+extension ToolbarContent {
+    /// The box draws its own background, so don't also put it in the toolbar's shared
+    /// glass background (macOS 26 and later).
+    @ToolbarContentBuilder
+    func hidingSharedBackground() -> some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            sharedBackgroundVisibility(.hidden)
+        } else {
+            self
+        }
+    }
+}
+
 /// "● QLab Connection", in bold, with the reason after it when not connected.
 private struct ConnectionTitle: View {
     let title: String
@@ -196,13 +231,11 @@ private struct DetailLine: View {
     let label: String
     let value: String
     var isError = false
-    var monospaced = false
 
     var body: some View {
         HStack(spacing: 4) {
             Text(label).foregroundStyle(.secondary)
             Text(value)
-                .font(monospaced ? .system(.body, design: .monospaced) : .body)
                 .foregroundStyle(isError ? Color.red : Color.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)
