@@ -29,34 +29,30 @@ struct ComparisonPane: View {
                     .padding(.vertical, 6)
 
                     Table(shown) {
+                        TableColumn("QLab Cue Name") { row in
+                            Text(row.qlab?.displayName ?? "")
+                        }
+                        TableColumn("QLab Cue #") { row in
+                            Text(row.qlab?.number ?? "")
+                        }
+                        .width(min: 60, ideal: 80, max: 120)
                         TableColumn("Status") { row in
                             StatusBadge(status: row.status)
                         }
                         .width(min: 130, ideal: 160, max: 220)
-                        TableColumn("QLab #") { row in
-                            Text(row.qlab?.number ?? "")
-                        }
-                        .width(min: 50, ideal: 60, max: 100)
-                        TableColumn("QLab name") { row in
-                            Text(row.qlab?.displayName ?? "")
-                        }
                         TableColumn("") { row in
                             Text(isActive(row) ? "▶" : "")
                                 .foregroundStyle(.green)
                         }
                         .width(16)
-                        TableColumn("Eos cue") { row in
+                        TableColumn("Eos Cue #") { row in
                             Text(row.eos?.number ?? "")
                         }
-                        .width(min: 50, ideal: 60, max: 100)
-                        TableColumn("Eos label") { row in
+                        .width(min: 60, ideal: 80, max: 120)
+                        TableColumn("Eos Cue Label") { row in
                             Text(row.eos?.label ?? "")
                                 .foregroundStyle(row.status == .labelDiffers ? Color.orange : Color.primary)
                         }
-                        TableColumn("Time") { row in
-                            Text(row.eos?.upTimeMs.map(formatSeconds) ?? "")
-                        }
-                        .width(min: 40, ideal: 50, max: 80)
                     }
                 }
                 .frame(minWidth: 520)
@@ -169,9 +165,4 @@ struct Placeholder: View {
         }
         .frame(maxWidth: .infinity)
     }
-}
-
-func formatSeconds(_ ms: Int) -> String {
-    let seconds = Double(ms) / 1000
-    return seconds == seconds.rounded() ? String(Int(seconds)) : String(format: "%.1f", seconds)
 }
