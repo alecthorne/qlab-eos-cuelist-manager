@@ -63,7 +63,13 @@ final class AppSettings: ObservableObject {
         eosInterfaceName = defaults.string(forKey: Key.eosInterfaceName) ?? ""
         eosInterfaceChosen = defaults.object(forKey: Key.eosInterfaceName) != nil
         eosCueListText = defaults.string(forKey: Key.eosCueList) ?? ""
-        eosAddTemplate = defaults.string(forKey: Key.eosAddTemplate) ?? EosCommandBuilder.defaultAddTemplate
+        let savedAddTemplate = defaults.string(forKey: Key.eosAddTemplate)
+        if let saved = savedAddTemplate, !EosCommandBuilder.legacyAddTemplates.contains(saved) {
+            eosAddTemplate = saved
+        } else {
+            // No setting yet, or an old default that Eos misreads: use the current default.
+            eosAddTemplate = EosCommandBuilder.defaultAddTemplate
+        }
         eosUserText = defaults.string(forKey: Key.eosUser) ?? String(EosDefaults.user)
     }
 

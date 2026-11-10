@@ -114,14 +114,28 @@ public enum EosCommand: Equatable {
 public enum EosCommandBuilder {
     /// The default command for creating a blank cue. `{list}` and `{cue}` are filled in.
     /// Record Only stores only manual data, so with nothing manual on stage the cue is blank.
-    public static let defaultAddTemplate = "Record Only Cue {list}/{cue}#"
+    /// Typed as text, Eos needs `Record_Only` (it ignores a separate "Only", which makes a plain
+    /// Record of the whole stage) and spaces around the list separator (`16/1` is a syntax error).
+    public static let defaultAddTemplate = "Record_Only Cue {list} / {cue}#"
+
+    /// Earlier defaults that Eos misreads; saved settings holding one of these are upgraded.
+    public static let legacyAddTemplates = ["Record Only Cue {list}/{cue}#"]
+
+    /// Fixes the two ways an add command is known to be misread by Eos, so custom commands work too:
+    /// "Record Only" becomes `Record_Only`, and `{list}/{cue}` gets spaces around the slash.
+    public static func normalizedAddTemplate(_ template: String) -> String {
+        template
+            .replacingOccurrences(of: "Record Only", with: "Record_Only", options: .caseInsensitive)
+            .replacingOccurrences(of: "{list}/{cue}", with: "{list} / {cue}")
+    }
 
     public static func commands(for change: EosChange, addTemplate: String = defaultAddTemplate) -> [EosCommand] {
-        let cue = "Cue \(change.list)/\(change.number)"
+        // Spaces around "/" are required: Eos rejects "Cue 16/1" typed as text.
+        let cue = "Cue \(change.list) / \(change.number)"
         let label = EosCommand.setCueLabel(list: change.list, number: change.number, label: change.label)
         switch change.kind {
         case .add:
-            let create = addTemplate
+            let create = normalizedAddTemplate(addTemplate)
                 .replacingOccurrences(of: "{list}", with: String(change.list))
                 .replacingOccurrences(of: "{cue}", with: change.number)
             return [.line(create), .line("\(cue) Time 0#"), label]
