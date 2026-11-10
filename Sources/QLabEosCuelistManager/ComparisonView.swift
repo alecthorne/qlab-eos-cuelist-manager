@@ -93,7 +93,7 @@ struct StatusBadge: View {
         case .labelDiffers: return "Label differs"
         case .missingInEos: return "Missing in Eos"
         case .extraInEos: return "Not in QLab"
-        case .invalidQLabNumber: return "Not an Eos number"
+        case .invalidQLabNumber: return "Not a valid Eos cue #"
         case .duplicateQLabNumber: return "Duplicate number"
         }
     }
@@ -147,7 +147,9 @@ private struct Summary: View {
             ForEach(CueComparisonRow.Status.allCases.filter { $0 != .match && (counts[$0] ?? 0) > 0 }, id: \.self) { status in
                 HStack(spacing: 4) {
                     Circle().fill(StatusBadge.color(status)).frame(width: 8, height: 8)
-                    Text("\(counts[status] ?? 0) \(StatusBadge.title(status).lowercased())")
+                    // Lowercase only the first letter so "Eos" and "QLab" keep their capitals.
+                    let title = StatusBadge.title(status)
+                    Text("\(counts[status] ?? 0) \(title.prefix(1).lowercased() + title.dropFirst())")
                         .foregroundStyle(.secondary)
                 }
             }

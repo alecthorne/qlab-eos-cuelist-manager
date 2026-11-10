@@ -62,11 +62,20 @@ final class EosParsingTests: XCTestCase {
     }
 
     func testParsesCue() {
-        let message = OSCMessage("/eos/out/get/cue/5/2.5/0/list/3/12", [
-            .int(3), .string("UID-123"), .string("Lights up"), .int(3000), .int(0),
+        // As sent by a real console: the trailing "list/0/31" is the argument offset and
+        // argument count, and the cue's position in the list is the first argument.
+        let message = OSCMessage("/eos/out/get/cue/12/12.1/0/list/0/31", [
+            .int(1), .string("9F4F5CFC-B923-4261-8375-79578FA81F27"), .string("Lights up"), .int(3000), .int(0),
         ])
-        let expected = EosCue(list: 5, number: "2.5", part: 0, index: 3, uid: "UID-123", label: "Lights up", upTimeMs: 3000)
-        XCTAssertEqual(EosOutput.parse(message), .cue(expected, listCount: 12))
+        let expected = EosCue(list: 12, number: "12.1", part: 0, index: 1,
+                              uid: "9F4F5CFC-B923-4261-8375-79578FA81F27", label: "Lights up", upTimeMs: 3000)
+        XCTAssertEqual(EosOutput.parse(message), .cue(expected))
+    }
+
+    func testIgnoresCueArgumentContinuation() {
+        // A later chunk of a long argument list starts mid-way, so its first argument is not the index.
+        let message = OSCMessage("/eos/out/get/cue/12/12.1/0/list/20/31", [.int(0), .string("")])
+        XCTAssertEqual(EosOutput.parse(message), .other)
     }
 
     func testIgnoresCueSubReplies() {

@@ -11,9 +11,8 @@ struct ContentView: View {
 
     enum Tab: String, CaseIterable, Identifiable {
         case compare = "Compare"
-        case eos = "Eos cue list"
-        case qlab = "QLab cues"
         case actions = "Action log"
+        case connection = "Connection log"
         var id: String { rawValue }
     }
 
@@ -43,15 +42,11 @@ struct ContentView: View {
             Group {
                 switch tab {
                 case .compare: ComparisonPane()
-                case .eos: EosCuesPane()
-                case .qlab: QLabCuesPane()
                 case .actions: ActionLogPane()
+                case .connection: ConnectionLogPane()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            Divider()
-            ConnectionLogView()
         }
         .toolbar {
             ToolbarItemGroup {
@@ -195,85 +190,10 @@ struct Banner: View {
     }
 }
 
-// MARK: - Cue lists
-
-struct QLabCuesPane: View {
-    @EnvironmentObject private var model: AppModel
-    @EnvironmentObject private var settings: AppSettings
-    @EnvironmentObject private var qlab: QLabClient
-
-    var body: some View {
-        let cues = model.qlabNumberedCues
-        VStack(alignment: .leading, spacing: 0) {
-            PaneHeader(
-                title: "QLab: \(model.selectedQLabCueList?.displayName ?? "no cue list chosen")",
-                detail: "\(cues.count) numbered cues"
-            )
-            Table(cues) {
-                TableColumn("Number", value: \.number)
-                    .width(min: 50, ideal: 70, max: 120)
-                TableColumn("Name") { cue in Text(cue.displayName) }
-                TableColumn("Type", value: \.type)
-                    .width(min: 50, ideal: 80, max: 120)
-            }
-        }
-    }
-}
-
-struct EosCuesPane: View {
-    @EnvironmentObject private var eos: EosClient
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            PaneHeader(
-                title: eos.cueList.map { "Eos: cue list \($0)" } ?? "Eos: no cue list chosen",
-                detail: eos.isLoadingCues ? "Loading…" : "\(eos.cues.count) cues"
-            )
-            Table(eos.cues) {
-                TableColumn("") { cue in
-                    Text(isActive(cue) ? "▶" : "")
-                        .foregroundStyle(.green)
-                }
-                .width(16)
-                TableColumn("Cue") { cue in
-                    Text(cue.isPart ? "\(cue.number) pt \(cue.part)" : cue.number)
-                }
-                .width(min: 50, ideal: 70, max: 120)
-                TableColumn("Label", value: \.label)
-                TableColumn("Time") { cue in
-                    Text(cue.upTimeMs.map(formatSeconds) ?? "")
-                }
-                .width(min: 40, ideal: 60, max: 90)
-            }
-        }
-    }
-
-    private func isActive(_ cue: EosCue) -> Bool {
-        guard let active = eos.activeCue, !cue.isPart else { return false }
-        return active.list == cue.list && active.number == cue.number
-    }
-}
-
-struct PaneHeader: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack {
-            Text(title).font(.headline)
-            Spacer()
-            Text(detail).foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-    }
-}
-
 // MARK: - Log
 
-struct ConnectionLogView: View {
+struct ConnectionLogPane: View {
     @EnvironmentObject private var log: ConnectionLog
-    @State private var expanded = true
 
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -282,28 +202,31 @@ struct ConnectionLogView: View {
     }()
 
     var body: some View {
-        DisclosureGroup(isExpanded: $expanded) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(log.log.lines.reversed()) { line in
-                        Text("\(Self.timeFormatter.string(from: line.date))  [\(line.source)]  \(line.text)")
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                .padding(.horizontal, 4)
-            }
-            .frame(height: 120)
-        } label: {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Connection log")
+                Text("Connection log").font(.headline)
                 Spacer()
                 Button("Clear") { log.clear() }
-                    .buttonStyle(.borderless)
+                    .disabled(log.log.lines.isEmpty)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+
+            if log.log.lines.isEmpty {
+                Placeholder(text: "No connection events yet.")
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(log.log.lines.reversed()) { line in
+                            Text("\(Self.timeFormatter.string(from: line.date))  [\(line.source)]  \(line.text)")
+                                .font(.system(.caption, design: .monospaced))
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
     }
 }

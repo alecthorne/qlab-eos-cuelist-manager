@@ -58,6 +58,8 @@ final class ActionLog: ObservableObject {
 /// and checks that Eos really changed afterwards.
 final class ChangeController: ObservableObject {
     enum State: Equatable {
+        /// Approved as part of a batch; waiting for its turn to be sent.
+        case queued
         /// Sent; waiting for the Eos cue list to show the change.
         case sent
         /// Sent, but Eos still didn't match a few seconds later.
@@ -77,6 +79,8 @@ final class ChangeController: ObservableObject {
 
     /// How long to wait for Eos to report the change before calling it unconfirmed.
     private let confirmDelay: TimeInterval = 6
+    /// Gap between changes sent together, so each change's Eos replies can be told apart.
+    private let batchSpacing: TimeInterval = 0.5
 
     init(actionLog: ActionLog, settings: AppSettings, eos: EosClient, currentChanges: @escaping () -> [EosChange]?) {
         self.actionLog = actionLog
@@ -100,29 +104,84 @@ final class ChangeController: ObservableObject {
     }
 
     func approve(_ change: EosChange) {
+        approve([change])
+    }
+
+    /// Sends several changes in order, one every `batchSpacing` seconds, so that what Eos's
+    /// command line says can be matched to the change that caused it. Changes already queued
+    /// or waiting for Eos are left alone.
+    func approve(_ changes: [EosChange]) {
         lastError = nil
-        guard blockedReason == nil, let user = settings.eosUser else {
+        guard blockedReason == nil, settings.eosUser != nil else {
             lastError = blockedReason
             return
         }
-        guard states[change.id] != .sent else { return }
+        let queue = changes.filter(canSend)
+        guard !queue.isEmpty else { return }
+        queue.forEach { states[$0.id] = .queued }
+        sendNext(queue[...], sent: [])
+    }
+
+    private struct SentChange {
+        let change: EosChange
+        let logID: UUID
+        let sentAt: Date
+        /// When the next change in the batch was sent; Eos replies after this belong to it.
+        var nextSentAt: Date?
+    }
+
+    private func sendNext(_ queue: ArraySlice<EosChange>, sent: [SentChange]) {
+        var sent = sent
+        guard let change = queue.first else {
+            finishBatch(sent)
+            return
+        }
+        guard blockedReason == nil, let user = settings.eosUser else {
+            lastError = blockedReason
+            queue.forEach { states.removeValue(forKey: $0.id) }
+            finishBatch(sent)
+            return
+        }
 
         let commands = commands(for: change)
+        let sentAt = Date()
         guard eos.send(commands, user: user) else {
             lastError = "Could not send to Eos."
             actionLog.add(change, commands: commands, result: "Not sent: Eos not connected")
+            queue.forEach { states.removeValue(forKey: $0.id) }
+            finishBatch(sent)
             return
         }
-        let logID = actionLog.add(change, commands: commands, result: "Sent")
+        if !sent.isEmpty { sent[sent.count - 1].nextSentAt = sentAt }
+        sent.append(SentChange(change: change, logID: actionLog.add(change, commands: commands, result: "Sent"),
+                               sentAt: sentAt, nextSentAt: nil))
         states[change.id] = .sent
 
-        // Eos normally reports the change itself; re-read anyway in case it doesn't.
+        let rest = queue.dropFirst()
+        if rest.isEmpty {
+            finishBatch(sent)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + batchSpacing) { [weak self] in
+                self?.sendNext(rest, sent: sent)
+            }
+        }
+    }
+
+    /// After the last change in a batch is sent: re-read Eos, then check every change.
+    private func finishBatch(_ sent: [SentChange]) {
+        guard !sent.isEmpty else { return }
+        // Eos normally reports the changes itself; re-read once anyway in case it doesn't.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             self?.eos.refreshCues()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + confirmDelay) { [weak self] in
-            self?.checkResult(of: change, logID: logID)
+            sent.forEach { self?.checkResult(of: $0) }
         }
+    }
+
+    /// Whether a change can be sent now (not already queued or waiting for Eos).
+    func canSend(_ change: EosChange) -> Bool {
+        states[change.id] != .sent && states[change.id] != .queued
     }
 
     func skip(_ change: EosChange) {
@@ -136,13 +195,15 @@ final class ChangeController: ObservableObject {
     /// Forgets state for changes that are no longer needed (Eos now matches).
     func prune(current: [EosChange]) {
         let ids = Set(current.map(\.id))
-        let staleStates = states.keys.filter { !ids.contains($0) && states[$0] != .sent }
+        let staleStates = states.keys.filter { !ids.contains($0) && states[$0] != .sent && states[$0] != .queued }
         staleStates.forEach { states.removeValue(forKey: $0) }
         let staleSkips = skipped.filter { !ids.contains($0) }
         if !staleSkips.isEmpty { skipped.subtract(staleSkips) }
     }
 
-    private func checkResult(of change: EosChange, logID: UUID) {
+    private func checkResult(of sent: SentChange) {
+        let change = sent.change
+        let logID = sent.logID
         guard let current = currentChanges() else {
             states.removeValue(forKey: change.id)
             actionLog.setResult(logID, "Sent; couldn't check (cue lists not loaded)")
@@ -151,7 +212,8 @@ final class ChangeController: ObservableObject {
         if current.contains(where: { $0.id == change.id }) {
             states[change.id] = .notConfirmed
             // Show what Eos's command line said, which usually explains why.
-            let said = eos.commandLineSinceSend.suffix(3).joined(separator: "  /  ")
+            let said = eos.commandLineTexts(from: sent.sentAt, to: sent.nextSentAt)
+                .suffix(3).joined(separator: "  /  ")
             actionLog.setResult(logID, said.isEmpty
                 ? "Sent, but Eos still differs (no command line text from Eos)"
                 : "Sent, but Eos still differs. Eos said: \(said)")
