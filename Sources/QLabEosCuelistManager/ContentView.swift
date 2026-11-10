@@ -10,7 +10,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StatusBar()
+            ConnectionsHeader()
             Divider()
 
             if settings.eosCueList == nil {
@@ -30,6 +30,10 @@ struct ContentView: View {
             ConnectionLogSection()
         }
         .toolbar {
+            ToolbarItem {
+                ActiveCueBox()
+            }
+            .hidingSharedBackground()
             ToolbarItemGroup {
                 Button {
                     qlab.refreshCueLists()
@@ -66,29 +70,181 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Status
+// MARK: - Connections
 
-struct StatusBar: View {
-    @EnvironmentObject private var qlab: QLabClient
-    @EnvironmentObject private var eos: EosClient
-
+/// QLab and Eos connection details, side by side, at the top of the window.
+struct ConnectionsHeader: View {
     var body: some View {
-        HStack(spacing: 24) {
-            StatusLabel(qlab: qlab)
-            EosStatusLabel()
-            Spacer()
-            HStack(spacing: 6) {
-                Text("Eos active cue:")
-                    .foregroundStyle(.secondary)
-                Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
-                    .font(.system(.body, design: .monospaced))
-            }
+        HStack(alignment: .top, spacing: 0) {
+            QLabConnectionColumn()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+            Divider()
+            EosConnectionColumn()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
+struct QLabConnectionColumn: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var qlab: QLabClient
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            ConnectionTitle(title: "QLab Connection", color: statusColor, detail: statusDetail)
+            DetailLine(label: "Workspace:", value: qlab.connectedWorkspace?.displayName ?? "—")
+            DetailLine(label: "Cue List:", value: cueList.text, isError: cueList.isError)
+        }
+    }
+
+    private var cueList: (text: String, isError: Bool) {
+        if settings.qlabCueListID.isEmpty { return ("None chosen in Settings", false) }
+        if let list = model.selectedQLabCueList { return (list.displayName, false) }
+        // The chosen list can only be looked for once a workspace is open.
+        if qlab.status != .connected { return ("—", false) }
+        return ("Cue list not found in workspace", true)
+    }
+
+    private var statusColor: Color {
+        switch qlab.status {
+        case .connected: return .green
+        case .connecting, .waitingForWorkspace: return .yellow
+        case .disconnected: return .gray
+        case .error: return .red
+        }
+    }
+
+    /// Shown after the title when not connected, so the reason is visible.
+    private var statusDetail: String? {
+        switch qlab.status {
+        case .connected: return nil
+        case .connecting: return "Connecting…"
+        case .waitingForWorkspace(let reason): return reason
+        case .disconnected: return "Not connected"
+        case .error(let reason): return reason
+        }
+    }
+}
+
+struct EosConnectionColumn: View {
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var eos: EosClient
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            ConnectionTitle(title: "Eos Connection", color: statusColor, detail: statusDetail)
+                .help(eos.version.isEmpty ? "" : "Eos v\(eos.version)")
+            DetailLine(label: "Showfile:", value: eos.showName.isEmpty ? "—" : eos.showName)
+            DetailLine(label: "Video Cuelist:", value: videoCueList.text, isError: videoCueList.isError)
+        }
+    }
+
+    private var videoCueList: (text: String, isError: Bool) {
+        guard let number = settings.eosCueList else { return ("None chosen in Settings", false) }
+        guard eos.status == .connected else { return ("\(number)", false) }
+        guard let lists = eos.consoleCueLists else { return ("\(number) (checking…)", false) }
+        guard let label = lists[number] else { return ("Cuelist not found in console", true) }
+        return (label.isEmpty ? "\(number)" : "\(number) · \(label)", false)
+    }
+
+    private var statusColor: Color {
+        switch eos.status {
+        case .connected: return .green
+        case .connecting, .notConfigured: return .yellow
+        case .disconnected: return .gray
+        case .error: return .red
+        }
+    }
+
+    private var statusDetail: String? {
+        switch eos.status {
+        case .connected: return nil
+        case .connecting: return "Connecting…"
+        case .notConfigured(let reason): return reason
+        case .disconnected: return "Not connected"
+        case .error(let reason): return reason
+        }
+    }
+}
+
+/// The Eos active cue, in a box in the window toolbar.
+struct ActiveCueBox: View {
+    @EnvironmentObject private var eos: EosClient
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("Active Cue:")
+                .foregroundStyle(.secondary)
+            Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
+                .font(.system(.body, design: .monospaced))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.35)))
+        .help("The cue Eos is currently playing back")
+    }
+}
+
+extension ToolbarContent {
+    /// The box draws its own background, so don't also put it in the toolbar's shared
+    /// glass background (macOS 26 and later).
+    @ToolbarContentBuilder
+    func hidingSharedBackground() -> some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            sharedBackgroundVisibility(.hidden)
+        } else {
+            self
+        }
+    }
+}
+
+/// "● QLab Connection", in bold, with the reason after it when not connected.
+private struct ConnectionTitle: View {
+    let title: String
+    let color: Color
+    let detail: String?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 9, height: 9)
+            Text(title).bold()
+            if let detail {
+                Text(detail)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .help(detail)
+            }
+        }
+    }
+}
+
+/// "Label: value" on one line; the value turns red for errors.
+private struct DetailLine: View {
+    let label: String
+    let value: String
+    var isError = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(label).foregroundStyle(.secondary)
+            Text(value)
+                .foregroundStyle(isError ? Color.red : Color.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .help(value)
+        }
+    }
+}
+
+/// One-line connection status, used in Settings.
 struct StatusLabel: View {
     @ObservedObject var qlab: QLabClient
 

@@ -78,6 +78,22 @@ final class EosParsingTests: XCTestCase {
         XCTAssertEqual(EosOutput.parse(message), .other)
     }
 
+    func testParsesCueLists() {
+        XCTAssertEqual(EosRequest.cueListCount.address, "/eos/get/cuelist/count")
+        XCTAssertEqual(EosRequest.cueList(index: 1).address, "/eos/get/cuelist/index/1")
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/get/cuelist/count", [.int(11)])), .cueListCount(11))
+        // As sent by a real console.
+        let list = OSCMessage("/eos/out/get/cuelist/2/list/0/13", [
+            .int(1), .string("1DFEC79E-FC96-4BCD-8330-CE9116B3081D"), .string("MIDSUMMER NIGHT'S DREAM"),
+            .string("2/2"), .string("Proportional"), .bool(false),
+        ])
+        XCTAssertEqual(EosOutput.parse(list), .cueList(number: 2, index: 1, label: "MIDSUMMER NIGHT'S DREAM"))
+        let links = OSCMessage("/eos/out/get/cuelist/2/links/list/0/5", [.int(1), .string("UID"), .int(12)])
+        XCTAssertEqual(EosOutput.parse(links), .other)
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/notify/cuelist/list/0/1", [.int(9), .string("12")])),
+                       .cueListsChanged)
+    }
+
     func testIgnoresCueSubReplies() {
         let fx = OSCMessage("/eos/out/get/cue/5/2.5/0/fx/list/0/1", [.int(0), .string("UID")])
         XCTAssertEqual(EosOutput.parse(fx), .other)
