@@ -43,6 +43,15 @@ final class QLabParsingTests: XCTestCase {
         XCTAssertEqual(numbered.last?.displayName, "Network: Go 3")
     }
 
+    func testConnectPermissions() {
+        XCTAssertEqual(QLabReply.connectPermissions("ok:view|edit|control"), ["view", "edit", "control"])
+        XCTAssertEqual(QLabReply.connectPermissions("ok:view"), ["view"])
+        // As sent by QLab 5.4.7 with no passcode when nothing is allowed without one.
+        XCTAssertEqual(QLabReply.connectPermissions("ok:"), [])
+        // Older QLab versions don't list permissions.
+        XCTAssertNil(QLabReply.connectPermissions("ok"))
+    }
+
     func testIgnoresNonReplies() {
         XCTAssertNil(QLabReply.parse(OSCMessage("/update/workspace/W1")))
         XCTAssertNil(QLabReply.parse(OSCMessage("/reply/x", [.string("not json")])))
