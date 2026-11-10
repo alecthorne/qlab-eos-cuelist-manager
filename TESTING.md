@@ -69,7 +69,7 @@ the real QLab and Eos.
 - [ ] Clear a QLab cue's name so its displayed name is QLab's default, and check the Eos label follows.
 - [ ] Approve **Delete cue 5/9**. Nomad no longer has cue 5/9, with no confirmation left waiting on the command line.
 - [ ] Skip a change: it disappears and "1 skipped" shows. Press Show skipped: it's back.
-- [ ] Disconnect Eos: Approve buttons are disabled and the panel says Eos is not connected.
+- [ ] Disconnect Eos: the Add / Update / Delete Eos Cue buttons are disabled and the panel says Eos is not connected.
 - [ ] Make a change by hand in Nomad that undoes an approved one within 6 seconds of approving: the card says **Eos still differs** and offers Try again, and the action log says so.
 
 ## 5. Command line and Eos user

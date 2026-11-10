@@ -1,7 +1,8 @@
 import CueSyncCore
 import SwiftUI
 
-/// Lists every change Eos needs, one card each. Nothing is sent until you press Approve.
+/// Lists every change Eos needs, one card each. Nothing is sent until you press a card's
+/// action button (Add Eos Cue, Update Eos Cue Label or Delete Eos Cue) or one of the batch buttons.
 struct ApprovalPanel: View {
     let changes: [EosChange]
     @EnvironmentObject private var controller: ChangeController
@@ -26,7 +27,7 @@ struct ApprovalPanel: View {
             HStack {
                 Button("Approve All") { confirmingApproveAll = true }
                     .disabled(sendable.isEmpty || controller.blockedReason != nil)
-                Button("Update Eos Cue Labels") { controller.approve(labelEdits) }
+                Button("Update All Eos Cue Labels") { controller.approve(labelEdits) }
                     .disabled(labelEdits.isEmpty || controller.blockedReason != nil)
                 Spacer()
             }
@@ -169,7 +170,7 @@ struct ChangeCard: View {
                 Spacer()
                 Button("Skip") { controller.skip(change) }
                     .disabled(!controller.canSend(change))
-                Button(state == .notConfirmed ? "Try again" : "Approve") { controller.approve(change) }
+                Button(state == .notConfirmed ? "Try again" : actionTitle) { controller.approve(change) }
                     .buttonStyle(.borderedProminent)
                     .tint(change.kind == .delete ? Color.red : Color.accentColor)
                     .disabled(!controller.canSend(change) || controller.blockedReason != nil)
@@ -178,6 +179,15 @@ struct ChangeCard: View {
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.25)))
+    }
+
+    /// What the card's button does, e.g. "Add Eos Cue".
+    private var actionTitle: String {
+        switch change.kind {
+        case .add: return "Add Eos Cue"
+        case .updateLabel: return "Update Eos Cue Label"
+        case .delete: return "Delete Eos Cue"
+        }
     }
 
     private var kindColor: Color {
