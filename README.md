@@ -1,4 +1,4 @@
-# QLab Eos Cuelist Manager
+# QLab → Eos CueSync
 
 A macOS app that keeps one ETC Eos cue list in sync with the numbered cues of a QLab cue list.
 QLab is always the source of truth: Eos is made to match it, including cue labels.
