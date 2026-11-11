@@ -178,7 +178,7 @@ struct ActiveCueBox: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("Active Cue:")
+            Text("Active Eos Cue (main cuelist):")
                 .foregroundStyle(.secondary)
             Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
                 .font(.system(.body, design: .monospaced))
