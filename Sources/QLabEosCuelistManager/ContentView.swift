@@ -1,3 +1,4 @@
+import AppKit
 import CueSyncCore
 import SwiftUI
 
@@ -61,6 +62,7 @@ struct ContentView: View {
             }
             .frame(width: 580, height: 720)
         }
+        .background(NoInitialFocus())
         .onAppear {
             model.startIfNeeded()
             if settings.eosCueList == nil || settings.eosHost.isEmpty {
@@ -305,6 +307,27 @@ struct EosStatusLabel: View {
         case .notConfigured(let reason): return "Eos: \(reason)"
         case .disconnected: return "Eos: not connected"
         case .error(let reason): return "Eos: \(reason)"
+        }
+    }
+}
+
+/// Leaves nothing focused when the window first opens. Otherwise macOS focuses the first
+/// control (the Action log's disclosure arrow). Tab still moves focus as usual afterwards.
+private struct NoInitialFocus: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { ClearsFocusOnce() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    private final class ClearsFocusOnce: NSView {
+        private var cleared = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard !cleared, let window else { return }
+            cleared = true
+            // Wait a turn so this runs after the window has chosen its initial focus.
+            DispatchQueue.main.async { [weak window] in
+                window?.makeFirstResponder(nil)
+            }
         }
     }
 }
