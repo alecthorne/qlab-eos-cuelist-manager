@@ -77,26 +77,6 @@ struct SettingsView: View {
                         .foregroundStyle(.red)
                 }
 
-                HStack {
-                    EosStatusLabel()
-                    Spacer()
-                    Button("Connect to Eos") { model.connectEos() }
-                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
-
-            Section {
-                TextField("Command to add a blank cue", text: $settings.eosAddTemplate)
-                    .font(.system(.body, design: .monospaced))
-                HStack {
-                    Text("{list} and {cue} are filled in. Time 0 and the label are set afterwards.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Reset") { settings.eosAddTemplate = EosCommandBuilder.defaultAddTemplate }
-                        .disabled(settings.eosAddTemplate == EosCommandBuilder.defaultAddTemplate)
-                }
-
                 TextField("Send as Eos user", text: $settings.eosUserText, prompt: Text("Current user"))
                 if settings.eosUser == nil {
                     Text("Enter a user number from 0 to 99, or leave it empty.")
@@ -107,9 +87,15 @@ struct SettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
-            } header: {
-                Text("Changes to Eos")
+
+                HStack {
+                    EosStatusLabel()
+                    Spacer()
+                    Button("Connect to Eos") { model.connectEos() }
+                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
             }
+
         }
         .formStyle(.grouped)
         .onChange(of: settings.qlabWorkspaceID) { _ in model.connectQLab() }
