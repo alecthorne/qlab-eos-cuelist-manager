@@ -1,133 +1,156 @@
 # QLab → Eos CueSync
 
-A macOS app that keeps one ETC Eos cue list in sync with the numbered cues of a QLab cue list.
-QLab is always the source of truth: Eos is made to match it, including cue labels.
+QLab → Eos CueSync keeps one ETC Eos cue list in step with the numbered cues in a QLab cue list.
+It's built for the common setup where QLab fires Eos cues with matching numbers: whenever you add,
+renumber or rename cues in QLab, the app shows you exactly what's different on the console and
+fixes it for you, one approved change at a time.
 
-Runs on the same Mac as QLab and talks to both over OSC. Requires macOS 13 or later.
+**QLab is always the source of truth.** The app only ever changes Eos, and it never changes
+anything on the console until you approve it.
 
-## Status
+## What you need
 
-| Step | What | State |
-| --- | --- | --- |
-| 1 | App skeleton, settings, OSC connections to QLab and Eos | Done |
-| 2 | Side-by-side view with mismatches flagged, live active Eos cue | Done |
-| 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | Done |
-| 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Done: see [TESTING.md](TESTING.md) |
+- A Mac running macOS 13 or later, with QLab 5 running on the same Mac.
+- An ETC Eos family console (or Eos Nomad) on a network this Mac can reach.
 
-Nothing is sent to Eos that changes the show until you approve a change.
+## One-time setup
 
-## The Compare view
+### 1. Allow OSC in Eos
 
-Every numbered cue in the chosen QLab cue list is lined up with the Eos cue of the same number
-(1, 1.0 and 01 all count as cue 1). Each row gets one status:
+On the console, go to **Setup › System › Show Control › OSC** (or the same settings in the Eos
+Shell) and turn on **OSC RX** and **OSC TX**. The app connects over TCP, so the UDP port and IP
+address fields on that page don't matter.
 
-| Status | Meaning | Change offered |
-| --- | --- | --- |
-| Matches | Same number, and the Eos label equals the QLab name | Nothing |
-| Label differs | Cue exists in both, label is different | Update the Eos label |
-| Missing in Eos | QLab has the number, Eos doesn't | Add the cue in Eos |
-| Not in QLab | Eos has the number, QLab doesn't | Delete the cue in Eos |
-| Not a valid Eos cue # | QLab number like "1A" or "Pre" that Eos can't use | Nothing: renumber it in QLab |
-| Duplicate number | Two QLab cues map to the same Eos number | Nothing: fix it in QLab |
+### 2. Allow OSC access in QLab
 
-The QLab name used is the one shown in QLab's cue list, so a cue with no name uses QLab's default
-name. Eos cue parts are not compared. Eos numbers may have up to 4 decimal places.
+In your QLab workspace, open **Workspace Settings › Network › OSC Access**. The passcode you'll
+enter in the app (or "no passcode") needs **View** access. Without it, QLab refuses to share its
+cue lists and changes won't appear automatically.
 
-## Approving changes
+### 3. Connect the app
 
-The panel on the right of the Compare view lists every change Eos needs, one card each, with
-the exact command lines that will be sent. Press the card's button (**Add Eos Cue**, **Update Eos
-Cue Label** or **Delete Eos Cue**) to send that one change, or **Skip** to hide it for now.
-**Approve All** sends every change that isn't skipped, after a confirmation, and **Update All Eos
-Cue Labels** sends just the label updates. After sending, the app re-reads the Eos list; if Eos still differs after
-6 seconds the card says so and offers **Try again**.
+Open the app. The first time, the Settings sheet opens on its own; you can reopen it any time with
+the **gear** button in the toolbar.
 
-| Change | What is sent |
+**QLab (on this Mac)**
+
+| Setting | What to choose |
 | --- | --- |
-| Add | `Record_Only Cue 5 / 12#`, then `Cue 5 / 12 Time 0#` (both with `/eos/newcmd`), then the label as below |
-| Edit | `/eos/set/cue/5/12/label` with the QLab name as a string |
-| Delete | `Delete Cue 5 / 12 Enter Enter` (with `/eos/newcmd`) |
+| Workspace | Leave as **The only open workspace** if you only have one open. Otherwise pick the one to use. |
+| Passcode | Only needed if the workspace's OSC Access uses passcodes. |
+| Cue list | The QLab cue list whose numbered cues Eos should match. Cues inside groups count too. |
 
-New cues must be blank. Record Only stores only manual data, so with nothing manual on stage the
-cue is empty. **Check this on Nomad before using it on a show**, and if your console needs a
-different command, change "Command to add a blank cue" in Settings (`{list}` and `{cue}` are filled in).
+**Eos**
 
-Eos reads command text strictly. Write **`Record_Only`**: a separate "Only" is ignored, which makes a
-plain Record of everything on stage. And put **spaces around the `/`**: `Cue 5/12` is a syntax error,
-`Cue 5 / 12` works. The app fixes both in custom commands automatically.
+| Setting | What to choose |
+| --- | --- |
+| Console IP address | The console's IP address, e.g. `10.101.92.101`. |
+| Network interface | The network port on this Mac that's connected to the Eos network. Until you choose one, the app uses the port with a 10.101.x.x address. **Use default** goes back to that. |
+| Protocol | Leave on **OSC 1.1 (TCP port 3037)** unless you have a reason to use OSC 1.0 (port 3032). |
+| Cue list to sync | The number of the Eos cue list to keep in sync (1 to 999). There's deliberately no default, so the app can't touch the wrong list by accident. |
 
-Labels are set with Eos's `/eos/set/cue/.../label` message rather than typed on the command line,
-so any text in a QLab name is safe.
+**Changes to Eos**
 
-While a change is being sent, every message sent and every line Eos's command line shows is
-written to the Connection log. If Eos still differs after 6 seconds, the Action log entry includes
-what Eos's command line said, which usually explains why (for example an error from Eos).
+| Setting | What it does |
+| --- | --- |
+| Command to add a blank cue | How new cues are created. The default, `Record_Only Cue {list} / {cue}#`, makes a blank cue. You normally won't need to change it. |
+| Send as Eos user | The Eos user the app types as. The default, **61**, keeps the app's commands off the operator's own command line. Leave it empty to use the console's current user. |
 
-"Send as Eos user" (default 61) sends commands as that Eos user number, so the operator's own
-command line isn't touched. Empty uses the console's current user.
+The first time the app connects to Eos, macOS asks whether it may find devices on your local
+network. Click **Allow**, or it can't reach the console.
 
-Every change sent is written to the **Action log** (newest 500 lines), with the time, the
-change, the commands sent and whether Eos confirmed it. "Copy all" copies the log as text.
-The Action log and Connection log are collapsible panels at the bottom of the window; both
-start collapsed when the app opens.
+## The main window
 
-## Build and run
+### Connection status
 
-Open **`QLabEosCuelistManager.xcodeproj`** in Xcode 26 or later, choose the
-**QLabEosCuelistManager** scheme and **My Mac**, then Run (⌘R). Tests: ⌘U.
-This builds a proper sandboxed `.app` with the local network permission text.
-Pick your team under Signing & Capabilities the first time if Xcode asks.
+The top of the window shows both connections side by side:
 
-The project uses folder-synced groups, so new files added under `Sources/` or `Tests/`
-are picked up automatically.
+- **QLab Connection**: the workspace and cue list in use.
+- **Eos Connection**: the show file and the cue list being synced (**Video Cuelist**). If that cue
+  list doesn't exist on the console yet, it says **Cuelist not found in console** in red.
 
-The same code also builds as a Swift package, which is what the quick checks use:
-`swift build`, `swift run QLabEosCuelistManager`, `swift test`.
+The dot next to each title is green when connected, yellow while connecting, and red if there's a
+problem (the reason is shown next to it).
 
-On macOS 15 and later, macOS asks for permission to find devices on local networks the first time
-the app connects to Eos. Allow it, or the Eos connection fails.
+The toolbar shows the **Active Eos Cue (main cuelist)**, the cue Eos is playing back right now.
+**Refresh** (↻) re-reads both cue lists, though you'll rarely need it: changes made in QLab or on
+the console show up on their own within a second or so.
 
-## Settings
+### Compare
 
-- **QLab workspace**: if only one workspace is open, it is used automatically. Otherwise choose one.
-- **QLab passcode**: only if the workspace has OSC passcodes set.
-- **QLab cue list**: every numbered cue in this list (including inside groups) is synced.
-- **Eos console IP address** and **network interface**: choose the interface that is on the Eos network.
-  Until you choose one, the app uses the interface with a 10.101.x.x address, and follows it if it
-  changes (for example a USB adapter plugged in later). With no such interface it uses "Automatic",
-  which lets macOS pick using its routing table. "Use default" forgets your choice.
-- **Protocol**: OSC 1.1 on TCP port 3037 (default), or OSC 1.0 on TCP port 3032.
-- **Eos cue list to sync**: required. There is deliberately no default.
+Every numbered QLab cue is lined up with the Eos cue of the same number (1, 1.0 and 01 all count
+as cue 1). The columns are **QLab Cue Name**, **QLab Cue #**, **Status**, **Eos Cue #** and
+**Eos Cue Label**, and a green ▶ marks the active Eos cue.
 
-## Setting up Eos
+| Status | Meaning | What the app offers |
+| --- | --- | --- |
+| Matches | Same number, and the Eos label equals the QLab name | Nothing to do |
+| Label differs | The cue exists in both, but the Eos label is different | Update the Eos label |
+| Missing in Eos | QLab has this number, Eos doesn't | Add a blank cue in Eos |
+| Not in QLab | Eos has this number, QLab doesn't | Delete the cue in Eos |
+| Not a valid Eos cue # | A QLab number Eos can't use, like "1A" or "Pre" | Nothing: renumber it in QLab |
+| Duplicate number | Two QLab cues share the same number | Nothing: fix it in QLab |
 
-In the Eos Shell or Setup > System > Show Control > OSC, turn on **OSC RX** and **OSC TX**.
-The app connects over TCP, so the UDP ports and IP address fields there don't matter for it.
-It works with Eos Nomad too, which is the easiest way to test without a console.
+Hover over a status for a longer explanation. Turn on **Only show differences** to hide matching
+cues. The summary above the table counts each kind of difference.
 
-## Setting up QLab
+A few details:
 
-In Workspace Settings > Network > OSC Access, make sure the passcode you use (or "no passcode")
-has at least View access for reading cues. Step 1 needs nothing else, because only Eos is changed later.
+- The QLab name used is the one shown in QLab's cue list, so an unnamed cue uses QLab's default name.
+- Eos cue numbers can have up to 4 decimal places.
+- Multipart cues aren't compared part by part.
 
-## How it talks to each side
+## Making changes to Eos
 
-- **QLab**: TCP to `127.0.0.1:53000` with SLIP framing. Sends `/workspaces`,
-  `/workspace/{id}/connect`, `/workspace/{id}/updates 1` and `/workspace/{id}/cueLists`,
-  and re-reads cue lists when QLab sends `/update/...` messages.
-- **Eos**: TCP to the console on the chosen interface. Sends `/eos/subscribe 1`,
-  `/eos/get/cue/{list}/count` and `/eos/get/cue/{list}/index/{n}`, re-reads the list when
-  Eos sends `/eos/out/notify/cue/{list}/...`, and shows `/eos/out/active/cue/...`.
-  It pings every 5 seconds and reconnects after 15 seconds of silence.
+The **Changes to approve** panel, on the right, lists one card for every change Eos needs. Each
+card shows what will happen and the exact commands that will be sent. Nothing is sent until you
+press a button.
 
-## Code layout
+| Button | What it does |
+| --- | --- |
+| **Add Eos Cue** | Creates a blank cue with time 0 and the QLab name as its label. |
+| **Update Eos Cue Label** | Sets the Eos label to the QLab name. |
+| **Delete Eos Cue** (red) | Deletes the cue from Eos. |
+| **Skip** | Hides the change for now. **Show skipped** brings skipped changes back. |
+| **Approve All** | Sends every change that isn't skipped, after a confirmation listing how many adds, label edits and deletes there are. |
+| **Update All Eos Cue Labels** | Sends just the label updates, straight away. |
 
-- `Sources/CueSyncCore`: OSC encoding and decoding, TCP framing, and parsing of QLab and Eos
-  messages. Foundation only, covered by unit tests.
-- `Sources/QLabEosCuelistManager`: the SwiftUI app, settings and Network.framework connections.
-- `Tests/CueSyncCoreTests`: unit tests, run on GitHub Actions (macOS) for every pull request.
+After a change is sent, the app re-reads the Eos cue list to check it worked. When it has, the
+card disappears and the row turns **Matches**. If Eos still differs after about 6 seconds, the card
+says so and offers **Try again**. Check the console, and see the Action log for what Eos said.
 
-## References
+If the Eos cue list you chose doesn't exist on the console yet, adding the first cue would create
+it. The app asks first: **Create a new Eos cue list?**
 
-- [Eos OSC dictionary](https://www.etcconnect.com/WebDocs/Controls/EosFamilyOnlineHelp/en/Content/22_Show_Control/08_OSC/OSC_Dictionary.htm)
-- [QLab 5 OSC dictionary](https://qlab.app/docs/v5/scripting/osc-dictionary-v5/)
+### Good to know before using it on a show
+
+- **New cues are created blank** with Record Only, which stores only manual data. With nothing
+  manual on stage, the new cue is empty. Clear any manual data before adding cues, or check the
+  new cues afterwards.
+- **Commands are sent as Eos user 61** (unless you change it), so the app doesn't type on the
+  operator's command line.
+- **Labels are sent as text, not typed**, so any characters in a QLab cue name are safe.
+- **Deletes are permanent.** Delete cards are red, and Approve All lists how many deletes it will
+  send before you confirm.
+- If you change **Command to add a blank cue**, write `Record_Only` as one word and put spaces
+  around the `/` (`Cue {list} / {cue}`). Eos misreads them otherwise, and the app corrects both
+  automatically.
+
+## Logs
+
+Two panels at the bottom of the window, both collapsed when the app opens. Click a title to expand it.
+
+- **Action log**: every change sent to Eos (newest 500), with the time, the change, the commands
+  sent and the result. If a change didn't take, the result includes what Eos's command line said,
+  which usually explains why. **Copy all** copies the log as text.
+- **Connection log**: connections, disconnections, errors, and every message sent to Eos.
+
+## Troubleshooting
+
+| What you see | What to check |
+| --- | --- |
+| Eos dot is red or stays yellow | The console IP address and network interface in Settings, that OSC RX/TX are on, and that macOS was allowed to use the local network (System Settings › Privacy & Security › Local Network). |
+| **Cuelist not found in console** | The **Cue list to sync** number in Settings. If you do want a new list, adding a cue creates it (the app asks first). |
+| QLab cues don't appear, or changes in QLab need Refresh | The passcode and its **View** permission in QLab's OSC Access settings. The Connection log says if QLab refused access. |
+| A change keeps saying Eos still differs | The Action log entry: it includes what Eos's command line said, such as a syntax error. |
+| **Not a valid Eos cue #** or **Duplicate number** | Renumber the cue in QLab. The app never changes QLab. |
