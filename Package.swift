@@ -15,7 +15,8 @@ let package = Package(
         // The macOS SwiftUI app: settings, networking (Network.framework) and UI.
         .executableTarget(
             name: "QLabEosCuelistManager",
-            dependencies: ["CueSyncCore"]
+            dependencies: ["CueSyncCore"],
+            exclude: ["Assets.xcassets"]
         ),
         .testTarget(
             name: "CueSyncCoreTests",
