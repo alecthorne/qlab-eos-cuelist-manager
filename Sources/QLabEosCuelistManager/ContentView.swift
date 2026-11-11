@@ -13,6 +13,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             ConnectionsHeader()
             Divider()
+                .padding(.vertical, 6)
 
             if settings.eosCueList == nil {
                 Banner(text: "Choose the Eos cue list to sync before anything else.",
@@ -77,14 +78,18 @@ struct ContentView: View {
 /// QLab and Eos connection details, side by side, at the top of the window.
 struct ConnectionsHeader: View {
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            QLabConnectionColumn()
-                .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Connections").font(.headline)
                 .padding(.horizontal, 12)
-            Divider()
-            EosConnectionColumn()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
+            HStack(alignment: .top, spacing: 0) {
+                QLabConnectionColumn()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                Divider()
+                EosConnectionColumn()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+            }
         }
         .padding(.vertical, 8)
         .fixedSize(horizontal: false, vertical: true)
@@ -385,11 +390,13 @@ struct ConnectionLogSection: View {
             }
         } label: {
             HStack {
-                Text("Connection log")
+                Text("Connection Log")
                 Spacer()
-                Button("Clear") { log.clear() }
-                    .buttonStyle(.borderless)
-                    .disabled(log.log.lines.isEmpty)
+                if expanded {
+                    Button("Clear") { log.clear() }
+                        .buttonStyle(.borderless)
+                        .disabled(log.log.lines.isEmpty)
+                }
             }
         }
         .padding(.horizontal, 12)

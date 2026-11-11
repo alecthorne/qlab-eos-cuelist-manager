@@ -17,7 +17,7 @@ struct ApprovalPanel: View {
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Changes to approve").font(.headline)
+                Text("Changes to Approve").font(.headline)
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)
             }
@@ -232,12 +232,14 @@ struct ActionLogSection: View {
             }
         } label: {
             HStack {
-                Text("Action log")
+                Text("Action Log")
                 Spacer()
-                Button("Copy all") { actionLog.copyToPasteboard() }
-                    .disabled(actionLog.log.lines.isEmpty)
-                Button("Clear") { actionLog.clear() }
-                    .disabled(actionLog.log.lines.isEmpty)
+                if expanded {
+                    Button("Copy all") { actionLog.copyToPasteboard() }
+                        .disabled(actionLog.log.lines.isEmpty)
+                    Button("Clear") { actionLog.clear() }
+                        .disabled(actionLog.log.lines.isEmpty)
+                }
             }
             .buttonStyle(.borderless)
         }

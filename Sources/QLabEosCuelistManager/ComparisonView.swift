@@ -17,6 +17,10 @@ struct ComparisonPane: View {
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
+                    Text("Cues").font(.headline)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+
                     HStack(spacing: 16) {
                         Summary(rows: rows)
                         Spacer()
@@ -40,13 +44,13 @@ struct ComparisonPane: View {
                             StatusBadge(status: row.status)
                         }
                         .width(min: 130, ideal: 160, max: 220)
-                        TableColumn("") { row in
-                            Text(isActive(row) ? "▶" : "")
-                                .foregroundStyle(.green)
-                        }
-                        .width(16)
                         TableColumn("Eos Cue #") { row in
-                            Text(row.eos?.number ?? "")
+                            HStack(spacing: 4) {
+                                if isActive(row) {
+                                    Text("▶").foregroundStyle(.green)
+                                }
+                                Text(row.eos?.number ?? "")
+                            }
                         }
                         .width(min: 60, ideal: 80, max: 120)
                         TableColumn("Eos Cue Label") { row in
@@ -113,7 +117,7 @@ struct StatusBadge: View {
         case .labelDiffers: return .orange
         case .missingInEos: return .blue
         case .extraInEos: return .red
-        case .invalidQLabNumber: return .gray
+        case .invalidQLabNumber: return .yellow
         case .duplicateQLabNumber: return .purple
         }
     }
@@ -122,7 +126,7 @@ struct StatusBadge: View {
         switch status {
         case .match: return "Same number and label in QLab and Eos."
         case .labelDiffers: return "The Eos label doesn't match the QLab name. You can approve updating it in the panel on the right."
-        case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it (blank, time 0) in the panel on the right."
+        case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it in the panel on the right."
         case .extraInEos: return "Eos has this cue but QLab doesn't. You can approve deleting it in the panel on the right."
         case .invalidQLabNumber: return "This QLab cue number can't be used as an Eos cue number (Eos needs a number like 12 or 12.5). Renumber it in QLab to sync it."
         case .duplicateQLabNumber: return "More than one QLab cue has this number. Fix it in QLab; nothing will be synced for this number until then."
