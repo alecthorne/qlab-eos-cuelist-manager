@@ -1,7 +1,7 @@
 # QLab → Eos CueSync
 
 QLab → Eos CueSync keeps one ETC Eos cue list in step with the numbered cues in a QLab cue list.
-It's built for the common setup where QLab fires Eos cues with matching numbers: whenever you add,
+It's built for the common setup where Eos fires QLab cues with matching numbers: whenever you add,
 renumber or rename cues in QLab, the app shows you exactly what's different on the console and
 fixes it for you, one approved change at a time.
 
@@ -56,9 +56,7 @@ the **gear** button in the toolbar.
 | Command to add a blank cue | How new cues are created. The default, `Record_Only Cue {list} / {cue}#`, makes a blank cue. You normally won't need to change it. |
 | Send as Eos user | The Eos user the app types as. The default, **61**, keeps the app's commands off the operator's own command line. Leave it empty to use the console's current user. |
 
-The first time the app connects to Eos, macOS asks whether it may find devices on your local
-network. Click **Allow**, or it can't reach the console.
-
+The first time the app connects to Eos, macOS asks whether it may find devices on your local network. Click **Allow**, or it can't reach the console.
 ## The main window
 
 ### Connection status
