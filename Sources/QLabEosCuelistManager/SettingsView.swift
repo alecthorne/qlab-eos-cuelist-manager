@@ -10,6 +10,12 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("QLab (on this Mac)") {
+                HStack {
+                    StatusLabel(qlab: qlab)
+                    Spacer()
+                    Button("Reconnect to QLab") { model.connectQLab() }
+                }
+
                 Picker("Workspace", selection: $settings.qlabWorkspaceID) {
                     Text("The only open workspace").tag("")
                     ForEach(qlab.workspaces) { workspace in
@@ -33,15 +39,16 @@ struct SettingsView: View {
                         Text("Saved cue list (not found)").tag(settings.qlabCueListID)
                     }
                 }
-
-                HStack {
-                    StatusLabel(qlab: qlab)
-                    Spacer()
-                    Button("Reconnect to QLab") { model.connectQLab() }
-                }
             }
 
             Section("Eos") {
+                HStack {
+                    EosStatusLabel()
+                    Spacer()
+                    Button("Connect to Eos") { model.connectEos() }
+                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
                 TextField("Console IP address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
 
                 Picker("Network interface", selection: $settings.eosInterfaceName) {
@@ -87,15 +94,7 @@ struct SettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
-
-                HStack {
-                    EosStatusLabel()
-                    Spacer()
-                    Button("Connect to Eos") { model.connectEos() }
-                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
             }
-
         }
         .formStyle(.grouped)
         .onChange(of: settings.qlabWorkspaceID) { _ in model.connectQLab() }
