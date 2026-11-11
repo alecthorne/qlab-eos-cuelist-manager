@@ -27,7 +27,7 @@ struct SettingsView: View {
                     }
                 }
 
-                SecureField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
+                TextField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
 
                 Picker("Cue list", selection: $settings.qlabCueListID) {
                     Text("Choose a cue list…").tag("")
