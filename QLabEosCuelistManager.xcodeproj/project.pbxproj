@@ -29,7 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		000000000000000000000120 /* QLabEosCuelistManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QLabEosCuelistManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000120 /* QLab → Eos CueSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "QLab → Eos CueSync.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* libCueSyncCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCueSyncCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000122 /* CueSyncCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueSyncCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000140 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -90,7 +90,7 @@
 		000000000000000000000020 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000120 /* QLabEosCuelistManager.app */,
+				000000000000000000000120 /* QLab → Eos CueSync.app */,
 				000000000000000000000121 /* libCueSyncCore.a */,
 				000000000000000000000122 /* CueSyncCoreTests.xctest */,
 			);
@@ -118,7 +118,7 @@
 			);
 			name = QLabEosCuelistManager;
 			productName = QLabEosCuelistManager;
-			productReference = 000000000000000000000120 /* QLabEosCuelistManager.app */;
+			productReference = 000000000000000000000120 /* QLab → Eos CueSync.app */;
 			productType = "com.apple.product-type.application";
 		};
 		000000000000000200000000 /* CueSyncCore */ = {
@@ -329,7 +329,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "QLab Eos Cuelist Manager";
+				INFOPLIST_KEY_CFBundleDisplayName = "QLab → Eos CueSync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connects to QLab on this Mac and to the Eos lighting console on your network to keep their cue lists in sync.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -338,7 +338,8 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alecthorne.QLabEosCuelistManager;
-				PRODUCT_NAME = QLabEosCuelistManager;
+				PRODUCT_MODULE_NAME = QLabEosCuelistManager;
+				PRODUCT_NAME = "QLab → Eos CueSync";
 				SUPPORTED_PLATFORMS = macosx;
 			};
 			name = Debug;
@@ -353,7 +354,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "QLab Eos Cuelist Manager";
+				INFOPLIST_KEY_CFBundleDisplayName = "QLab → Eos CueSync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connects to QLab on this Mac and to the Eos lighting console on your network to keep their cue lists in sync.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -362,7 +363,8 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alecthorne.QLabEosCuelistManager;
-				PRODUCT_NAME = QLabEosCuelistManager;
+				PRODUCT_MODULE_NAME = QLabEosCuelistManager;
+				PRODUCT_NAME = "QLab → Eos CueSync";
 				SUPPORTED_PLATFORMS = macosx;
 			};
 			name = Release;

@@ -7,7 +7,7 @@ struct QLabEosCuelistManagerApp: App {
     @StateObject private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("QLab Eos Cuelist Manager") {
+        WindowGroup("QLab → Eos CueSync") {
             ContentView()
                 .environmentObjects(model)
                 .frame(minWidth: 900, minHeight: 520)
