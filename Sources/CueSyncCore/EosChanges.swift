@@ -118,9 +118,6 @@ public enum EosCommandBuilder {
     /// Record of the whole stage) and spaces around the list separator (`16/1` is a syntax error).
     public static let defaultAddTemplate = "Record_Only Cue {list} / {cue}#"
 
-    /// Earlier defaults that Eos misreads; saved settings holding one of these are upgraded.
-    public static let legacyAddTemplates = ["Record Only Cue {list}/{cue}#"]
-
     /// Fixes the two ways an add command is known to be misread by Eos, so custom commands work too:
     /// "Record Only" becomes `Record_Only`, and `{list}/{cue}` gets spaces around the slash.
     public static func normalizedAddTemplate(_ template: String) -> String {

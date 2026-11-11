@@ -94,16 +94,13 @@ final class ChangeController: ObservableObject {
     }
 
     func commands(for change: EosChange) -> [EosCommand] {
-        EosCommandBuilder.commands(for: change, addTemplate: settings.eosAddTemplate)
+        EosCommandBuilder.commands(for: change)
     }
 
     /// Why changes can't be sent right now, or nil if they can.
     var blockedReason: String? {
         if eos.status != .connected { return "Eos is not connected." }
         if settings.eosUser == nil { return "The Eos user number in Settings isn't valid." }
-        if settings.eosAddTemplate.trimmingCharacters(in: .whitespaces).isEmpty {
-            return "The command for adding a cue is empty in Settings."
-        }
         return nil
     }
 

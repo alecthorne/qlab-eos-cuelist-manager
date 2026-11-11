@@ -40,8 +40,6 @@ final class AppSettings: ObservableObject {
     /// The Eos cue list to keep in sync, exactly as typed. Deliberately has no default.
     @Published var eosCueListText: String { didSet { defaults.set(eosCueListText, forKey: Key.eosCueList) } }
 
-    /// Command line used to create a blank cue; {list} and {cue} are filled in.
-    @Published var eosAddTemplate: String { didSet { defaults.set(eosAddTemplate, forKey: Key.eosAddTemplate) } }
     /// Eos user number to send commands as (default 61). Empty = the console's current user.
     @Published var eosUserText: String { didSet { defaults.set(eosUserText, forKey: Key.eosUser) } }
 
@@ -63,13 +61,8 @@ final class AppSettings: ObservableObject {
         eosInterfaceName = defaults.string(forKey: Key.eosInterfaceName) ?? ""
         eosInterfaceChosen = defaults.object(forKey: Key.eosInterfaceName) != nil
         eosCueListText = defaults.string(forKey: Key.eosCueList) ?? ""
-        let savedAddTemplate = defaults.string(forKey: Key.eosAddTemplate)
-        if let saved = savedAddTemplate, !EosCommandBuilder.legacyAddTemplates.contains(saved) {
-            eosAddTemplate = saved
-        } else {
-            // No setting yet, or an old default that Eos misreads: use the current default.
-            eosAddTemplate = EosCommandBuilder.defaultAddTemplate
-        }
+        // The add-cue command used to be a setting; it's fixed now, so drop any saved value.
+        defaults.removeObject(forKey: Key.eosAddTemplate)
         eosUserText = defaults.string(forKey: Key.eosUser) ?? String(EosDefaults.user)
     }
 

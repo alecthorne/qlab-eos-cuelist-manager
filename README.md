@@ -48,12 +48,6 @@ the **gear** button in the toolbar.
 | Network interface | The network port on this Mac that's connected to the Eos network. Until you choose one, the app uses the port with a 10.101.x.x address. **Use default** goes back to that. |
 | Protocol | Leave on **OSC 1.1 (TCP port 3037)** unless you have a reason to use OSC 1.0 (port 3032). |
 | Cue list to sync | The number of the Eos cue list to keep in sync (1 to 999). There's deliberately no default, so the app can't touch the wrong list by accident. |
-
-**Changes to Eos**
-
-| Setting | What it does |
-| --- | --- |
-| Command to add a blank cue | How new cues are created. The default, `Record_Only Cue {list} / {cue}#`, makes a blank cue. You normally won't need to change it. |
 | Send as Eos user | The Eos user the app types as. The default, **61**, keeps the app's commands off the operator's own command line. Leave it empty to use the console's current user. |
 
 The first time the app connects to Eos, macOS asks whether it may find devices on your local network. Click **Allow**, or it can't reach the console.
@@ -130,9 +124,6 @@ it. The app asks first: **Create a new Eos cue list?**
 - **Labels are sent as text, not typed**, so any characters in a QLab cue name are safe.
 - **Deletes are permanent.** Delete cards are red, and Approve All lists how many deletes it will
   send before you confirm.
-- If you change **Command to add a blank cue**, write `Record_Only` as one word and put spaces
-  around the `/` (`Cue {list} / {cue}`). Eos misreads them otherwise, and the app corrects both
-  automatically.
 
 ## Logs
 

@@ -10,6 +10,12 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("QLab (on this Mac)") {
+                HStack {
+                    StatusLabel(qlab: qlab)
+                    Spacer()
+                    Button("Reconnect to QLab") { model.connectQLab() }
+                }
+
                 Picker("Workspace", selection: $settings.qlabWorkspaceID) {
                     Text("The only open workspace").tag("")
                     ForEach(qlab.workspaces) { workspace in
@@ -21,7 +27,7 @@ struct SettingsView: View {
                     }
                 }
 
-                SecureField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
+                TextField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
 
                 Picker("Cue list", selection: $settings.qlabCueListID) {
                     Text("Choose a cue list…").tag("")
@@ -33,15 +39,16 @@ struct SettingsView: View {
                         Text("Saved cue list (not found)").tag(settings.qlabCueListID)
                     }
                 }
-
-                HStack {
-                    StatusLabel(qlab: qlab)
-                    Spacer()
-                    Button("Reconnect to QLab") { model.connectQLab() }
-                }
             }
 
             Section("Eos") {
+                HStack {
+                    EosStatusLabel()
+                    Spacer()
+                    Button("Connect to Eos") { model.connectEos() }
+                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
                 TextField("Console IP address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
 
                 Picker("Network interface", selection: $settings.eosInterfaceName) {
@@ -77,26 +84,6 @@ struct SettingsView: View {
                         .foregroundStyle(.red)
                 }
 
-                HStack {
-                    EosStatusLabel()
-                    Spacer()
-                    Button("Connect to Eos") { model.connectEos() }
-                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
-
-            Section {
-                TextField("Command to add a blank cue", text: $settings.eosAddTemplate)
-                    .font(.system(.body, design: .monospaced))
-                HStack {
-                    Text("{list} and {cue} are filled in. Time 0 and the label are set afterwards.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Reset") { settings.eosAddTemplate = EosCommandBuilder.defaultAddTemplate }
-                        .disabled(settings.eosAddTemplate == EosCommandBuilder.defaultAddTemplate)
-                }
-
                 TextField("Send as Eos user", text: $settings.eosUserText, prompt: Text("Current user"))
                 if settings.eosUser == nil {
                     Text("Enter a user number from 0 to 99, or leave it empty.")
@@ -107,8 +94,6 @@ struct SettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
-            } header: {
-                Text("Changes to Eos")
             }
         }
         .formStyle(.grouped)
