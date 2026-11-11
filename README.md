@@ -14,7 +14,7 @@ Runs on the same Mac as QLab and talks to both over OSC. Requires macOS 13 or la
 | 3 | Add, edit and delete Eos cues, each change approved by you, with a 500-line action log | Done |
 | 4 | Unit tests for the matching logic, and a test checklist for Eos Nomad and QLab | Done: see [TESTING.md](TESTING.md) |
 
-Nothing is sent to Eos that changes the show until you press Approve on a change.
+Nothing is sent to Eos that changes the show until you approve a change.
 
 ## The Compare view
 
@@ -36,8 +36,10 @@ name. Eos cue parts are not compared. Eos numbers may have up to 4 decimal place
 ## Approving changes
 
 The panel on the right of the Compare view lists every change Eos needs, one card each, with
-the exact command lines that will be sent. Press **Approve** to send that one change, or **Skip**
-to hide it for now. After sending, the app re-reads the Eos list; if Eos still differs after
+the exact command lines that will be sent. Press the card's button (**Add Eos Cue**, **Update Eos
+Cue Label** or **Delete Eos Cue**) to send that one change, or **Skip** to hide it for now.
+**Approve All** sends every change that isn't skipped, after a confirmation, and **Update All Eos
+Cue Labels** sends just the label updates. After sending, the app re-reads the Eos list; if Eos still differs after
 6 seconds the card says so and offers **Try again**.
 
 | Change | What is sent |
