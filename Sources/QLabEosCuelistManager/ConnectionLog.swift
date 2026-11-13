@@ -17,6 +17,17 @@ final class ConnectionLog: ObservableObject {
         log.append(LogLine(date: Date(), source: source, text: text))
     }
 
+    /// Logs a connection problem the app keeps retrying.
+    func addRetrying(_ source: String, _ problem: String) {
+        add(source, problem, then: "Retrying.")
+    }
+
+    /// Logs a problem followed by what the app did about it, e.g. "… Retrying."
+    func add(_ source: String, _ problem: String, then outcome: String) {
+        let sentence = problem.hasSuffix(".") || problem.hasSuffix("?") ? problem : problem + "."
+        add(source, sentence + " " + outcome)
+    }
+
     func clear() {
         log.removeAll()
     }

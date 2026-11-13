@@ -6,10 +6,13 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var interfaces: NetworkInterfaceMonitor
+    @State private var mainCueListText = ""
+    @State private var mainCueListInvalid = false
+    @FocusState private var mainCueListFocused: Bool
 
     var body: some View {
         Form {
-            Section("QLab (on this Mac)") {
+            Section("QLab (On This Mac)") {
                 HStack {
                     StatusLabel(qlab: qlab)
                     Spacer()
@@ -17,26 +20,26 @@ struct SettingsView: View {
                 }
 
                 Picker("Workspace", selection: $settings.qlabWorkspaceID) {
-                    Text("The only open workspace").tag("")
+                    Text("The Only Open Workspace").tag("")
                     ForEach(qlab.workspaces) { workspace in
                         Text(workspace.displayName).tag(workspace.id)
                     }
                     if !settings.qlabWorkspaceID.isEmpty,
                        !qlab.workspaces.contains(where: { $0.id == settings.qlabWorkspaceID }) {
-                        Text("Saved workspace (not open)").tag(settings.qlabWorkspaceID)
+                        Text("Saved Workspace (Not Open)").tag(settings.qlabWorkspaceID)
                     }
                 }
 
-                TextField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only if the workspace has one"))
+                TextField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only If the Workspace Has One"))
 
-                Picker("Cue list", selection: $settings.qlabCueListID) {
-                    Text("Choose a cue list…").tag("")
+                Picker("Cue List", selection: $settings.qlabCueListID) {
+                    Text("Choose a Cue List…").tag("")
                     ForEach(qlab.cueLists) { list in
                         Text(list.displayName).tag(list.id)
                     }
                     if !settings.qlabCueListID.isEmpty,
                        !qlab.cueLists.contains(where: { $0.id == settings.qlabCueListID }) {
-                        Text("Saved cue list (not found)").tag(settings.qlabCueListID)
+                        Text("Saved Cue List (Not Found)").tag(settings.qlabCueListID)
                     }
                 }
             }
@@ -49,16 +52,16 @@ struct SettingsView: View {
                         .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
 
-                TextField("Console IP address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
+                TextField("Console IP Address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
 
-                Picker("Network interface", selection: $settings.eosInterfaceName) {
-                    Text("Automatic (let macOS choose)").tag("")
+                Picker("Network Interface", selection: $settings.eosInterfaceName) {
+                    Text("Automatic (Let macOS Choose)").tag("")
                     ForEach(interfaces.interfaces) { interface in
                         Text(interface.title).tag(interface.name)
                     }
                     if !settings.eosInterfaceName.isEmpty,
                        !interfaces.interfaces.contains(where: { $0.name == settings.eosInterfaceName }) {
-                        Text("\(settings.eosInterfaceName) (not available)").tag(settings.eosInterfaceName)
+                        Text("\(settings.eosInterfaceName) (Not Available)").tag(settings.eosInterfaceName)
                     }
                 }
                 HStack {
@@ -68,23 +71,36 @@ struct SettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("Use default") { model.useDefaultEosInterface() }
+                    Button("Use Default") { model.useDefaultEosInterface() }
                         .disabled(!settings.eosInterfaceChosen)
                 }
 
                 Picker("Protocol", selection: $settings.eosFraming) {
-                    Text("OSC 1.1 (TCP port 3037)").tag(OSCTCPFraming.slip)
-                    Text("OSC 1.0 (TCP port 3032)").tag(OSCTCPFraming.lengthPrefix)
+                    Text("OSC 1.1 (TCP Port 3037)").tag(OSCTCPFraming.slip)
+                    Text("OSC 1.0 (TCP Port 3032)").tag(OSCTCPFraming.lengthPrefix)
                 }
 
-                TextField("Cue list to sync", text: $settings.eosCueListText, prompt: Text("Required"))
+                TextField("Video Cuelist to Sync", text: $settings.eosCueListText, prompt: Text("Required"))
                 if settings.eosCueList == nil {
                     Text("Enter the number of the Eos cue list to keep in sync (1 to 999). There is no default.")
                         .font(.callout)
                         .foregroundStyle(.red)
                 }
 
-                TextField("Send as Eos user", text: $settings.eosUserText, prompt: Text("Current user"))
+                TextField("Main Cuelist", text: $mainCueListText)
+                    .focused($mainCueListFocused)
+                    .onSubmit(commitMainCueList)
+                if mainCueListInvalid {
+                    Text("Enter a cuelist number from 1 to 999. Still using cuelist \(settings.eosMainCueList).")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                } else {
+                    Text("Primary cuelist to watch for the current cue.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
+                TextField("Send as Eos User", text: $settings.eosUserText, prompt: Text("Current User"))
                 if settings.eosUser == nil {
                     Text("Enter a user number from 0 to 99, or leave it empty.")
                         .font(.callout)
@@ -99,5 +115,24 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .onChange(of: settings.qlabWorkspaceID) { _ in model.connectQLab() }
         .onChange(of: settings.eosCueListText) { _ in model.eos.setCueList(settings.eosCueList) }
+        .onChange(of: mainCueListFocused) { focused in
+            if !focused { commitMainCueList() }
+        }
+        .onAppear { mainCueListText = String(settings.eosMainCueList) }
+        // Closing Settings while still typing doesn't always move focus first.
+        .onDisappear(perform: commitMainCueList)
+    }
+
+    /// Checks the Main Cuelist field once the user is done with it. Only valid numbers are saved;
+    /// otherwise the error stays up and the last valid number keeps being used.
+    private func commitMainCueList() {
+        guard let list = EosCueListNumber.parse(mainCueListText) else {
+            mainCueListInvalid = true
+            return
+        }
+        mainCueListInvalid = false
+        mainCueListText = String(list)
+        settings.eosMainCueList = list
+        model.eos.setMainCueList(list)
     }
 }

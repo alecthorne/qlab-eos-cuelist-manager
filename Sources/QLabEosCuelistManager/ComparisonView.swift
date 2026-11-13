@@ -27,7 +27,7 @@ struct ComparisonPane: View {
                         if eos.isLoadingCues {
                             ProgressView().controlSize(.small)
                         }
-                        Toggle("Only show differences", isOn: $onlyDifferences)
+                        Toggle("Only Show Differences", isOn: $onlyDifferences)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -90,11 +90,11 @@ struct StatusBadge: View {
     static func title(_ status: CueComparisonRow.Status) -> String {
         switch status {
         case .match: return "Matches"
-        case .labelDiffers: return "Label differs"
+        case .labelDiffers: return "Label Differs"
         case .missingInEos: return "Missing in Eos"
         case .extraInEos: return "Not in QLab"
-        case .invalidQLabNumber: return "Not a valid Eos cue #"
-        case .duplicateQLabNumber: return "Duplicate number"
+        case .invalidQLabNumber: return "Not a Valid Eos Cue #"
+        case .duplicateQLabNumber: return "Duplicate Number"
         }
     }
 
@@ -141,15 +141,13 @@ private struct Summary: View {
         let counts = CueComparison.counts(rows)
         let mismatches = rows.filter(\.isMismatch).count
         HStack(spacing: 12) {
-            Text(mismatches == 0 ? "Eos matches QLab" : "\(mismatches) difference\(mismatches == 1 ? "" : "s")")
+            Text(mismatches == 0 ? "Eos matches QLab" : "\(mismatches) Difference\(mismatches == 1 ? "" : "s")")
                 .font(.headline)
                 .foregroundStyle(mismatches == 0 ? Color.green : Color.primary)
             ForEach(CueComparisonRow.Status.allCases.filter { $0 != .match && (counts[$0] ?? 0) > 0 }, id: \.self) { status in
                 HStack(spacing: 4) {
                     Circle().fill(StatusBadge.color(status)).frame(width: 8, height: 8)
-                    // Lowercase only the first letter so "Eos" and "QLab" keep their capitals.
-                    let title = StatusBadge.title(status)
-                    Text("\(counts[status] ?? 0) \(title.prefix(1).lowercased() + title.dropFirst())")
+                    Text("\(counts[status] ?? 0) \(StatusBadge.title(status))")
                         .foregroundStyle(.secondary)
                 }
             }

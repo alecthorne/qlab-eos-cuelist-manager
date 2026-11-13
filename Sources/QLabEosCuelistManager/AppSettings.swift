@@ -13,6 +13,7 @@ final class AppSettings: ObservableObject {
         static let eosCueList = "eosCueList"
         static let eosAddTemplate = "eosAddTemplate"
         static let eosUser = "eosUser"
+        static let eosMainCueList = "eosMainCueList"
     }
 
     private let defaults: UserDefaults
@@ -46,6 +47,10 @@ final class AppSettings: ObservableObject {
     /// The Eos user to send as: .some(nil) for the current user, nil if what was typed is invalid.
     var eosUser: Int?? { EosUserNumber.parse(eosUserText) }
 
+    /// The cue list whose current cue is shown in the main window (1 to 999). Settings only
+    /// saves valid numbers here.
+    @Published var eosMainCueList: Int { didSet { defaults.set(eosMainCueList, forKey: Key.eosMainCueList) } }
+
     /// The validated Eos cue list number, or nil if the user has not entered a valid one.
     var eosCueList: Int? { EosCueListNumber.parse(eosCueListText) }
 
@@ -64,6 +69,7 @@ final class AppSettings: ObservableObject {
         // The add-cue command used to be a setting; it's fixed now, so drop any saved value.
         defaults.removeObject(forKey: Key.eosAddTemplate)
         eosUserText = defaults.string(forKey: Key.eosUser) ?? String(EosDefaults.user)
+        eosMainCueList = EosCueListNumber.parse(defaults.string(forKey: Key.eosMainCueList) ?? "") ?? EosDefaults.mainCueList
     }
 
     /// Uses `name` as the Eos interface if the user hasn't picked one. Returns true if it changed.

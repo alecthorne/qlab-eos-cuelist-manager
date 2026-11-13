@@ -83,9 +83,23 @@ final class QLabClient: ObservableObject {
             pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
                 self?.requestWorkspaces()
             }
-        case .failed(let reason):
+        case .failed(let failure):
+            let reason: String
+            let logged: String
+            switch failure {
+            case .refused, .unreachable:
+                reason = "Can't find QLab. Is it open on this Mac?"
+                logged = reason
+            case .closed:
+                reason = "QLab closed the connection"
+                logged = reason
+            case .other(let detail):
+                // The system's wording is only useful when diagnosing, so it goes in the log.
+                reason = "Can't connect to QLab. Check Connection Log for details."
+                logged = "Can't connect to QLab: \(detail)"
+            }
             if status != .error(reason) {
-                log.add("QLab", "Not connected: \(reason). Retrying.")
+                log.addRetrying("QLab", logged)
             }
             pollTimer?.invalidate()
             pollTimer = nil
@@ -181,7 +195,7 @@ final class QLabClient: ObservableObject {
         pendingWorkspaceID = nil
         let result = reply.data as? String ?? ""
         guard reply.isOK, result.hasPrefix("ok") else {
-            let reason = result == "badpass" ? "Wrong QLab passcode" : "QLab refused the connection (\(result.isEmpty ? reply.status : result))"
+            let reason = result == "badpass" ? "The QLab passcode is wrong. Check it in Settings." : "QLab refused the connection (\(result.isEmpty ? reply.status : result))"
             log.add("QLab", reason)
             status = .error(reason)
             return
