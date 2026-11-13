@@ -186,6 +186,13 @@ final class QLabClient: ObservableObject {
 
         if connectedWorkspace?.id == target.id || pendingWorkspaceID == target.id { return }
         pendingWorkspaceID = target.id
+        // Never send a passcode QLab can't accept: too many wrong ones locks this app out.
+        guard QLabPasscode.isValid(passcode) else {
+            let reason = "The QLab passcode must be four digits. Check it in Settings."
+            if status != .error(reason) { log.add("QLab", reason) }
+            status = .error(reason)
+            return
+        }
         let args: [OSCArgument] = passcode.isEmpty ? [] : [.string(passcode)]
         connection?.send(OSCMessage("/workspace/\(target.id)/connect", args))
     }

@@ -44,12 +44,6 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Forgets the interface picked in Settings and goes back to the default.
-    func useDefaultEosInterface() {
-        settings.clearEosInterfaceChoice()
-        applyDefaultEosInterface(interfaces.interfaces)
-    }
-
     func startIfNeeded() {
         guard !started else { return }
         started = true

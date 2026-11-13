@@ -19,6 +19,29 @@ final class EosDefaultsTests: XCTestCase {
         XCTAssertFalse(EosDefaults.isEosNetworkAddress(""))
     }
 
+    func testIPv4Address() {
+        XCTAssertTrue(EosDefaults.isIPv4Address("10.101.100.101"))
+        XCTAssertTrue(EosDefaults.isIPv4Address("127.0.0.1"))
+        XCTAssertTrue(EosDefaults.isIPv4Address("0.0.0.0"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.101.100"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.101.100.256"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.101.100.101:3037"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.101..101"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.+1.1.1"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("10.101.100.1011"))
+        XCTAssertFalse(EosDefaults.isIPv4Address("eos.local"))
+        XCTAssertFalse(EosDefaults.isIPv4Address(""))
+    }
+
+    func testQLabPasscode() {
+        XCTAssertTrue(QLabPasscode.isValid(""))
+        XCTAssertTrue(QLabPasscode.isValid("0123"))
+        XCTAssertFalse(QLabPasscode.isValid("123"))
+        XCTAssertFalse(QLabPasscode.isValid("12345"))
+        XCTAssertFalse(QLabPasscode.isValid("12a4"))
+        XCTAssertFalse(QLabPasscode.isValid(" 1234"))
+    }
+
     func testPicksFirstInterfaceOnEosNetwork() {
         let interfaces: [(name: String, addresses: [String])] = [
             ("en0", ["192.168.1.20"]),

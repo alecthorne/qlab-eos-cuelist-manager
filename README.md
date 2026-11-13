@@ -37,7 +37,7 @@ the **gear** button in the toolbar.
 | Setting | What to choose |
 | --- | --- |
 | Workspace | Leave as **The Only Open Workspace** if you only have one open. Otherwise pick the one to use. |
-| Passcode | Only needed if the workspace's OSC Access uses passcodes. |
+| Passcode | Only needed if the workspace's OSC Access uses passcodes. QLab passcodes are four digits. |
 | Cue List | The QLab cue list whose numbered cues Eos should match. Cues inside groups count too. |
 
 **Eos**
@@ -45,7 +45,7 @@ the **gear** button in the toolbar.
 | Setting | What to choose |
 | --- | --- |
 | Console IP Address | The console's IP address, e.g. `10.101.92.101`. |
-| Network Interface | The network port on this Mac that's connected to the Eos network. Until you choose one, the app uses the port with a 10.101.x.x address. **Use Default** goes back to that. |
+| Network Interface | The network port on this Mac that's connected to the Eos network. Until you choose one, the app uses the port with a 10.101.x.x address. |
 | Protocol | Leave on **OSC 1.1 (TCP Port 3037)** unless you have a reason to use OSC 1.0 (port 3032). |
 | Video Cuelist to Sync | The number of the Eos cue list to keep in sync (1 to 999). There's deliberately no default, so the app can't touch the wrong list by accident. |
 | Main Cuelist | The cuelist whose current cue is shown in the toolbar (1 to 999). The default is **1**. |
