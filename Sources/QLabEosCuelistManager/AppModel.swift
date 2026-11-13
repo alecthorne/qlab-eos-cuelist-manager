@@ -27,6 +27,7 @@ final class AppModel: ObservableObject {
         self.interfaces = interfaces
         self.qlab = QLabClient(log: log)
         self.eos = EosClient(log: log) { name in interfaces.nwInterface(named: name) }
+        eos.setMainCueList(settings.eosMainCueList)
 
         // Fires now with the current list, then whenever interfaces come and go.
         interfaceWatch = interfaces.$interfaces.sink { [weak self] list in

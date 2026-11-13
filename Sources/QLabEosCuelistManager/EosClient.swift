@@ -27,6 +27,9 @@ final class EosClient: ObservableObject {
     }
 
     @Published private(set) var status: Status = .disconnected
+    /// True once connecting has failed `maxRetries` retries in a row. Nothing more is tried
+    /// until the connection is started again (e.g. from Settings).
+    @Published private(set) var gaveUp = false
     @Published private(set) var version = ""
     @Published private(set) var showName = ""
     /// The cue list being synced. nil until the user chooses one.
@@ -38,7 +41,9 @@ final class EosClient: ObservableObject {
     @Published private(set) var cuesLoaded = false
     /// The show's cue lists (number → label), or nil until they've been read.
     @Published private(set) var consoleCueLists: [Int: String]?
+    /// The active cue in any cue list, as Eos reports it.
     @Published private(set) var activeCue: EosCueRef?
+    /// The current cue in `mainCueList`, e.g. "1/5 Lights up 3.0", or "" if not known yet.
     @Published private(set) var activeCueText = ""
     @Published private(set) var pendingCueText = ""
 
@@ -50,6 +55,11 @@ final class EosClient: ObservableObject {
     private var refreshWork: DispatchWorkItem?
     private var heartbeat: Timer?
     private var lastMessageAt = Date()
+    private var mainCueList = EosDefaults.mainCueList
+    /// The latest /eos/out/active/cue/text, whichever cue list it was for.
+    private var lastActiveText = ""
+    private var failedAttempts = 0
+    private static let maxRetries = 5
 
     /// While changes are being sent, Eos command line text is written to the connection log
     /// and kept here with the time it arrived, so each failed change can show what Eos said
@@ -90,13 +100,24 @@ final class EosClient: ObservableObject {
         connection = nil
         config = nil
         status = .disconnected
+        gaveUp = false
+        failedAttempts = 0
         version = ""
         showName = ""
         clearCues()
         consoleCueLists = nil
         activeCue = nil
         activeCueText = ""
+        lastActiveText = ""
         pendingCueText = ""
+    }
+
+    /// Changes which cue list's current cue is shown in `activeCueText`.
+    func setMainCueList(_ list: Int) {
+        guard list != mainCueList else { return }
+        mainCueList = list
+        // Only known straight away if Eos's latest active cue is already in that list.
+        activeCueText = activeTextList(lastActiveText) == list ? lastActiveText : ""
     }
 
     /// Changes which cue list is synced, and re-reads it.
@@ -157,10 +178,7 @@ final class EosClient: ObservableObject {
         if !config.interfaceName.isEmpty {
             interface = interfaceLookup(config.interfaceName)
             if interface == nil {
-                let reason = "Network interface \(config.interfaceName) is not available"
-                if status != .error(reason) { log.add("Eos", reason + ". Retrying.") }
-                status = .error(reason)
-                scheduleReconnect()
+                retryOrGiveUp("The network interface \(config.interfaceName) isn't available. Is it plugged in?")
                 return
             }
         }
@@ -178,6 +196,7 @@ final class EosClient: ObservableObject {
             status = .connecting
         case .ready:
             status = .connected
+            failedAttempts = 0
             let via = (config?.interfaceName.isEmpty ?? true) ? "" : " via \(config!.interfaceName)"
             log.add("Eos", "Connected to \(config?.host ?? ""):\(config?.port ?? 0)\(via)")
             lastMessageAt = Date()
@@ -186,23 +205,49 @@ final class EosClient: ObservableObject {
             refreshCues()
             refreshCueLists()
             startHeartbeat()
-        case .failed(let reason):
-            connectionLost(reason)
+        case .failed(let failure):
+            switch failure {
+            case .refused:
+                connectionLost("Eos isn't accepting connections. Check the port and Eos's OSC TCP settings.")
+            case .unreachable:
+                let host = config?.host.trimmingCharacters(in: .whitespaces) ?? ""
+                connectionLost("Can't reach Eos at \(host). Check the IP address and network connection.")
+            case .closed:
+                connectionLost("Eos closed the connection")
+            case .other(let detail):
+                // The system's wording is only useful when diagnosing, so it goes in the log.
+                connectionLost("Can't connect to Eos. Check Connection Log for details.",
+                               logged: "Can't connect to Eos: \(detail)")
+            }
         }
     }
 
-    private func connectionLost(_ reason: String) {
-        if status != .error(reason) {
-            log.add("Eos", "Not connected: \(reason). Retrying.")
-        }
+    /// `logged` replaces `reason` in the Connection Log when it should say more.
+    private func connectionLost(_ reason: String, logged: String? = nil) {
         heartbeat?.invalidate()
         heartbeat = nil
         connection?.cancel()
         connection = nil
-        status = .error(reason)
         isLoadingCues = false
         cuesLoaded = false
         consoleCueLists = nil
+        retryOrGiveUp(reason, logged: logged)
+    }
+
+    /// Tries again in 3 seconds, unless that would be more than `maxRetries` retries in a row.
+    private func retryOrGiveUp(_ reason: String, logged: String? = nil) {
+        // Only log a reason when it changes, so retries don't flood the log.
+        let isNewReason = status != .error(reason)
+        status = .error(reason)
+        failedAttempts += 1
+        if failedAttempts > Self.maxRetries {
+            gaveUp = true
+            log.add("Eos", logged ?? reason, then: "Stopped trying after \(Self.maxRetries) retries.")
+            return
+        }
+        if isNewReason {
+            log.addRetrying("Eos", logged ?? reason)
+        }
         scheduleReconnect()
     }
 
@@ -223,7 +268,7 @@ final class EosClient: ObservableObject {
         heartbeat = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             guard let self else { return }
             if Date().timeIntervalSince(self.lastMessageAt) > 15 {
-                self.connectionLost("No reply from Eos for 15 seconds")
+                self.connectionLost("Eos stopped responding")
             } else {
                 self.connection?.send(EosRequest.ping)
             }
@@ -231,6 +276,13 @@ final class EosClient: ObservableObject {
     }
 
     // MARK: - Messages
+
+    /// The cue list active cue text is for: from the text itself, or else from the
+    /// /eos/out/active/cue/<list>/<cue> message that comes with it.
+    private func activeTextList(_ text: String) -> Int? {
+        guard !text.isEmpty else { return nil }
+        return EosActiveCueText.list(text) ?? activeCue?.list
+    }
 
     private func handle(_ message: OSCMessage) {
         lastMessageAt = Date()
@@ -289,8 +341,21 @@ final class EosClient: ObservableObject {
         case .activeCue(let list, let number, _):
             activeCue = EosCueRef(list: list, number: number)
         case .activeCueText(let text):
-            activeCueText = text
-            if text.isEmpty { activeCue = nil }
+            let wasMain = activeTextList(lastActiveText) == mainCueList
+            lastActiveText = text
+            if text.isEmpty {
+                activeCue = nil
+                if wasMain { activeCueText = "" }
+            } else if activeTextList(text) == mainCueList {
+                activeCueText = text
+            }
+        case .cueFired(let list, let number, let label):
+            // Eos's active cue may follow another list, so fire events keep the main list current.
+            // Skipped when the active cue text (which also has the time) already shows this cue.
+            let prefix = "\(list)/\(number)"
+            guard list == mainCueList,
+                  activeCueText != prefix, !activeCueText.hasPrefix(prefix + " ") else { return }
+            activeCueText = label.isEmpty ? prefix : prefix + " " + label
         case .pendingCueText(let text):
             pendingCueText = text
         case .commandLine(let user, let text):

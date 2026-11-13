@@ -119,6 +119,19 @@ final class EosParsingTests: XCTestCase {
                        .pendingCue(list: 5, number: "3"))
     }
 
+    func testParsesCueFired() {
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/event/cue/1/7/fire", [.string("Cue 7 Label")])),
+                       .cueFired(list: 1, number: "7", label: "Cue 7 Label"))
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/event/cue/1/7/stop", [.string("Cue 7 Label")])), .other)
+    }
+
+    func testReadsListFromActiveCueText() {
+        XCTAssertEqual(EosActiveCueText.list("5/2.5 Lights up 3.0 50%"), 5)
+        XCTAssertEqual(EosActiveCueText.list("12/3"), 12)
+        XCTAssertNil(EosActiveCueText.list("84.5 0.9 69%"))
+        XCTAssertNil(EosActiveCueText.list(""))
+    }
+
     func testParsesVersionShowAndPing() {
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/get/version", [.string("3.2.10")])), .version("3.2.10"))
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/show/name", [.string("Hamlet")])), .showName("Hamlet"))

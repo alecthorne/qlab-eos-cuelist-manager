@@ -13,7 +13,12 @@ struct ContentView: View {
         VStack(spacing: 0) {
             ConnectionsHeader()
             Divider()
+                .padding(.vertical, 6)
 
+            if eos.gaveUp {
+                Banner(text: "Can't connect to Eos. Check the IP address and network connection in Settings.",
+                       buttonTitle: "Open Settings") { showingSettings = true }
+            }
             if settings.eosCueList == nil {
                 Banner(text: "Choose the Eos cue list to sync before anything else.",
                        buttonTitle: "Open Settings") { showingSettings = true }
@@ -38,7 +43,12 @@ struct ContentView: View {
             ToolbarItemGroup {
                 Button {
                     qlab.refreshCueLists()
-                    eos.refreshCues()
+                    if eos.status == .connected {
+                        eos.refreshCues()
+                    } else {
+                        // Starts over with a fresh set of retries, like Connect to Eos in Settings.
+                        model.connectEos()
+                    }
                 } label: {
                     Label("Refresh", systemImage: "arrow.clockwise")
                 }
@@ -77,14 +87,18 @@ struct ContentView: View {
 /// QLab and Eos connection details, side by side, at the top of the window.
 struct ConnectionsHeader: View {
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            QLabConnectionColumn()
-                .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Connections").font(.headline)
                 .padding(.horizontal, 12)
-            Divider()
-            EosConnectionColumn()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
+            HStack(alignment: .top, spacing: 0) {
+                QLabConnectionColumn()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                Divider()
+                EosConnectionColumn()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+            }
         }
         .padding(.vertical, 8)
         .fixedSize(horizontal: false, vertical: true)
@@ -105,7 +119,7 @@ struct QLabConnectionColumn: View {
     }
 
     private var cueList: (text: String, isError: Bool) {
-        if settings.qlabCueListID.isEmpty { return ("None chosen in Settings", false) }
+        if settings.qlabCueListID.isEmpty { return ("None Chosen in Settings", false) }
         if let list = model.selectedQLabCueList { return (list.displayName, false) }
         // The chosen list can only be looked for once a workspace is open.
         if qlab.status != .connected { return ("—", false) }
@@ -127,7 +141,7 @@ struct QLabConnectionColumn: View {
         case .connected: return nil
         case .connecting: return "Connecting…"
         case .waitingForWorkspace(let reason): return reason
-        case .disconnected: return "Not connected"
+        case .disconnected: return "Not Connected"
         case .error(let reason): return reason
         }
     }
@@ -147,9 +161,9 @@ struct EosConnectionColumn: View {
     }
 
     private var videoCueList: (text: String, isError: Bool) {
-        guard let number = settings.eosCueList else { return ("None chosen in Settings", false) }
+        guard let number = settings.eosCueList else { return ("None Chosen in Settings", false) }
         guard eos.status == .connected else { return ("\(number)", false) }
-        guard let lists = eos.consoleCueLists else { return ("\(number) (checking…)", false) }
+        guard let lists = eos.consoleCueLists else { return ("\(number) (Checking…)", false) }
         guard let label = lists[number] else { return ("Cuelist not found in console", true) }
         return (label.isEmpty ? "\(number)" : "\(number) · \(label)", false)
     }
@@ -168,7 +182,7 @@ struct EosConnectionColumn: View {
         case .connected: return nil
         case .connecting: return "Connecting…"
         case .notConfigured(let reason): return reason
-        case .disconnected: return "Not connected"
+        case .disconnected: return "Not Connected"
         case .error(let reason): return reason
         }
     }
@@ -180,7 +194,7 @@ struct ActiveCueBox: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("Active Eos Cue (main cuelist):")
+            Text("Active Eos Cue (Main Cuelist):")
                 .foregroundStyle(.secondary)
             Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
                 .font(.system(.body, design: .monospaced))
@@ -190,7 +204,7 @@ struct ActiveCueBox: View {
         .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.35)))
-        .help("The cue Eos is currently playing back")
+        .help("The cue Eos is currently playing back in the main cuelist, set in Settings")
     }
 }
 
@@ -268,10 +282,10 @@ struct StatusLabel: View {
 
     private var text: String {
         switch qlab.status {
-        case .connected: return "QLab: \(qlab.connectedWorkspace?.displayName ?? "connected")"
-        case .connecting: return "QLab: connecting…"
+        case .connected: return "QLab: \(qlab.connectedWorkspace?.displayName ?? "Connected")"
+        case .connecting: return "QLab: Connecting…"
         case .waitingForWorkspace(let reason): return "QLab: \(reason)"
-        case .disconnected: return "QLab: not connected"
+        case .disconnected: return "QLab: Not Connected"
         case .error(let reason): return "QLab: \(reason)"
         }
     }
@@ -299,13 +313,13 @@ struct EosStatusLabel: View {
     private var text: String {
         switch eos.status {
         case .connected:
-            var parts = ["Eos: connected"]
+            var parts = ["Eos: Connected"]
             if !eos.version.isEmpty { parts.append("v\(eos.version)") }
             if !eos.showName.isEmpty { parts.append(eos.showName) }
             return parts.joined(separator: " · ")
-        case .connecting: return "Eos: connecting…"
+        case .connecting: return "Eos: Connecting…"
         case .notConfigured(let reason): return "Eos: \(reason)"
-        case .disconnected: return "Eos: not connected"
+        case .disconnected: return "Eos: Not Connected"
         case .error(let reason): return "Eos: \(reason)"
         }
     }
@@ -385,11 +399,13 @@ struct ConnectionLogSection: View {
             }
         } label: {
             HStack {
-                Text("Connection log")
+                Text("Connection Log")
                 Spacer()
-                Button("Clear") { log.clear() }
-                    .buttonStyle(.borderless)
-                    .disabled(log.log.lines.isEmpty)
+                if expanded {
+                    Button("Clear") { log.clear() }
+                        .buttonStyle(.borderless)
+                        .disabled(log.log.lines.isEmpty)
+                }
             }
         }
         .padding(.horizontal, 12)

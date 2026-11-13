@@ -5,6 +5,9 @@ public enum EosDefaults {
     /// The Eos user that commands are sent as unless Settings says otherwise.
     public static let user = 61
 
+    /// The cue list whose current cue is shown in the main window, unless Settings says otherwise.
+    public static let mainCueList = 1
+
     /// True for an IPv4 address in 10.101.0.0/16, the Eos network.
     public static func isEosNetworkAddress(_ address: String) -> Bool {
         let parts = address.split(separator: ".", omittingEmptySubsequences: false)

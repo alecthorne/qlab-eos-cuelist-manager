@@ -17,13 +17,17 @@ struct ComparisonPane: View {
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
+                    Text("Cues").font(.headline)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+
                     HStack(spacing: 16) {
                         Summary(rows: rows)
                         Spacer()
                         if eos.isLoadingCues {
                             ProgressView().controlSize(.small)
                         }
-                        Toggle("Only show differences", isOn: $onlyDifferences)
+                        Toggle("Only Show Differences", isOn: $onlyDifferences)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -40,13 +44,13 @@ struct ComparisonPane: View {
                             StatusBadge(status: row.status)
                         }
                         .width(min: 130, ideal: 160, max: 220)
-                        TableColumn("") { row in
-                            Text(isActive(row) ? "▶" : "")
-                                .foregroundStyle(.green)
-                        }
-                        .width(16)
                         TableColumn("Eos Cue #") { row in
-                            Text(row.eos?.number ?? "")
+                            HStack(spacing: 4) {
+                                if isActive(row) {
+                                    Text("▶").foregroundStyle(.green)
+                                }
+                                Text(row.eos?.number ?? "")
+                            }
                         }
                         .width(min: 60, ideal: 80, max: 120)
                         TableColumn("Eos Cue Label") { row in
@@ -86,11 +90,11 @@ struct StatusBadge: View {
     static func title(_ status: CueComparisonRow.Status) -> String {
         switch status {
         case .match: return "Matches"
-        case .labelDiffers: return "Label differs"
+        case .labelDiffers: return "Label Differs"
         case .missingInEos: return "Missing in Eos"
         case .extraInEos: return "Not in QLab"
-        case .invalidQLabNumber: return "Not a valid Eos cue #"
-        case .duplicateQLabNumber: return "Duplicate number"
+        case .invalidQLabNumber: return "Not a Valid Eos Cue #"
+        case .duplicateQLabNumber: return "Duplicate Number"
         }
     }
 
@@ -113,7 +117,7 @@ struct StatusBadge: View {
         case .labelDiffers: return .orange
         case .missingInEos: return .blue
         case .extraInEos: return .red
-        case .invalidQLabNumber: return .gray
+        case .invalidQLabNumber: return .yellow
         case .duplicateQLabNumber: return .purple
         }
     }
@@ -122,7 +126,7 @@ struct StatusBadge: View {
         switch status {
         case .match: return "Same number and label in QLab and Eos."
         case .labelDiffers: return "The Eos label doesn't match the QLab name. You can approve updating it in the panel on the right."
-        case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it (blank, time 0) in the panel on the right."
+        case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it in the panel on the right."
         case .extraInEos: return "Eos has this cue but QLab doesn't. You can approve deleting it in the panel on the right."
         case .invalidQLabNumber: return "This QLab cue number can't be used as an Eos cue number (Eos needs a number like 12 or 12.5). Renumber it in QLab to sync it."
         case .duplicateQLabNumber: return "More than one QLab cue has this number. Fix it in QLab; nothing will be synced for this number until then."
@@ -137,15 +141,13 @@ private struct Summary: View {
         let counts = CueComparison.counts(rows)
         let mismatches = rows.filter(\.isMismatch).count
         HStack(spacing: 12) {
-            Text(mismatches == 0 ? "Eos matches QLab" : "\(mismatches) difference\(mismatches == 1 ? "" : "s")")
+            Text(mismatches == 0 ? "Eos matches QLab" : "\(mismatches) Difference\(mismatches == 1 ? "" : "s")")
                 .font(.headline)
                 .foregroundStyle(mismatches == 0 ? Color.green : Color.primary)
             ForEach(CueComparisonRow.Status.allCases.filter { $0 != .match && (counts[$0] ?? 0) > 0 }, id: \.self) { status in
                 HStack(spacing: 4) {
                     Circle().fill(StatusBadge.color(status)).frame(width: 8, height: 8)
-                    // Lowercase only the first letter so "Eos" and "QLab" keep their capitals.
-                    let title = StatusBadge.title(status)
-                    Text("\(counts[status] ?? 0) \(title.prefix(1).lowercased() + title.dropFirst())")
+                    Text("\(counts[status] ?? 0) \(StatusBadge.title(status))")
                         .foregroundStyle(.secondary)
                 }
             }

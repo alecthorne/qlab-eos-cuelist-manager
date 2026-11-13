@@ -69,6 +69,8 @@ public enum EosOutput: Equatable {
     case activeCueText(String)
     case pendingCue(list: Int, number: String)
     case pendingCueText(String)
+    /// A cue was fired, in any cue list.
+    case cueFired(list: Int, number: String, label: String)
     case version(String)
     case showName(String)
     /// A show was loaded or cleared; re-read everything.
@@ -168,6 +170,13 @@ public enum EosOutput: Equatable {
             }
             return .other
 
+        case "event":
+            // /eos/out/event/cue/<list>/<cue>/fire = <label>
+            if rest.count == 5, rest[1] == "cue", rest[4] == "fire", let list = Int(rest[2]) {
+                return .cueFired(list: list, number: rest[3], label: args.first?.stringValue ?? "")
+            }
+            return .other
+
         case "show":
             if rest == ["show", "name"] { return .showName(args.first?.stringValue ?? "") }
             if rest == ["show", "loaded"] || rest == ["show", "cleared"] { return .showReset }
@@ -176,6 +185,17 @@ public enum EosOutput: Equatable {
         default:
             return .other
         }
+    }
+}
+
+/// The cue list an `/eos/out/active/cue/text` string is for, from its "<list>/<cue>" start,
+/// e.g. 5 for "5/2.5 Lights up 3.0 50%". nil if the text doesn't start that way.
+public enum EosActiveCueText {
+    public static func list(_ text: String) -> Int? {
+        let first = text.split(separator: " ", maxSplits: 1).first ?? ""
+        let parts = first.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count == 2, !parts[1].isEmpty else { return nil }
+        return Int(parts[0])
     }
 }
 

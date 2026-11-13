@@ -17,7 +17,7 @@ struct ApprovalPanel: View {
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Changes to approve").font(.headline)
+                Text("Changes to Approve").font(.headline)
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)
             }
@@ -64,9 +64,9 @@ struct ApprovalPanel: View {
             if skippedCount > 0 {
                 Divider()
                 HStack {
-                    Text("\(skippedCount) skipped").foregroundStyle(.secondary)
+                    Text("\(skippedCount) Skipped").foregroundStyle(.secondary)
                     Spacer()
-                    Button("Show skipped") { controller.restoreSkipped() }
+                    Button("Show Skipped") { controller.restoreSkipped() }
                 }
                 .padding(10)
             }
@@ -170,7 +170,7 @@ struct ChangeCard: View {
                 Spacer()
                 Button("Skip") { controller.skip(change) }
                     .disabled(!controller.canSend(change))
-                Button(state == .notConfirmed ? "Try again" : actionTitle) { controller.approve(change) }
+                Button(state == .notConfirmed ? "Try Again" : actionTitle) { controller.approve(change) }
                     .buttonStyle(.borderedProminent)
                     .tint(change.kind == .delete ? Color.red : Color.accentColor)
                     .disabled(!controller.canSend(change) || controller.blockedReason != nil)
@@ -222,7 +222,7 @@ struct ActionLogSection: View {
                     TableColumn("Change") { entry in Text(entry.summary) }
                     TableColumn("Result") { entry in Text(entry.result) }
                         .width(min: 100, ideal: 180, max: 260)
-                    TableColumn("Commands sent") { entry in
+                    TableColumn("Commands Sent") { entry in
                         Text(entry.commands.joined(separator: "  |  "))
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
@@ -232,12 +232,14 @@ struct ActionLogSection: View {
             }
         } label: {
             HStack {
-                Text("Action log")
+                Text("Action Log")
                 Spacer()
-                Button("Copy all") { actionLog.copyToPasteboard() }
-                    .disabled(actionLog.log.lines.isEmpty)
-                Button("Clear") { actionLog.clear() }
-                    .disabled(actionLog.log.lines.isEmpty)
+                if expanded {
+                    Button("Copy All") { actionLog.copyToPasteboard() }
+                        .disabled(actionLog.log.lines.isEmpty)
+                    Button("Clear") { actionLog.clear() }
+                        .disabled(actionLog.log.lines.isEmpty)
+                }
             }
             .buttonStyle(.borderless)
         }
