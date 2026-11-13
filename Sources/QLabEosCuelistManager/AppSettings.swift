@@ -82,10 +82,4 @@ final class AppSettings: ObservableObject {
         applyingDefaultInterface = false
         return true
     }
-
-    /// Forgets the user's interface choice, so the default applies again.
-    func clearEosInterfaceChoice() {
-        defaults.removeObject(forKey: Key.eosInterfaceName)
-        eosInterfaceChosen = false
-    }
 }
