@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var mainCueListText = ""
     @State private var mainCueListInvalid = false
     @FocusState private var mainCueListFocused: Bool
+    @FocusState private var passcodeFocused: Bool
+    @FocusState private var hostFocused: Bool
 
     var body: some View {
         Form {
@@ -31,6 +33,13 @@ struct SettingsView: View {
                 }
 
                 TextField("Passcode", text: $settings.qlabPasscode, prompt: Text("Only If the Workspace Has One"))
+                    .focused($passcodeFocused)
+                // Checked once the user leaves the field, so a half-typed value isn't flagged.
+                if !passcodeFocused, !QLabPasscode.isValid(settings.qlabPasscode) {
+                    Text("QLab passcodes are four digits. Leave it empty if the workspace doesn't use one.")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
 
                 Picker("Cue List", selection: $settings.qlabCueListID) {
                     Text("Choose a Cue List…").tag("")
@@ -49,10 +58,16 @@ struct SettingsView: View {
                     EosStatusLabel()
                     Spacer()
                     Button("Connect to Eos") { model.connectEos() }
-                        .disabled(settings.eosHost.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(!EosDefaults.isIPv4Address(eosHost))
                 }
 
                 TextField("Console IP Address", text: $settings.eosHost, prompt: Text("e.g. 10.101.100.101"))
+                    .focused($hostFocused)
+                if !hostFocused, !eosHost.isEmpty, !EosDefaults.isIPv4Address(eosHost) {
+                    Text("Enter the console's IP address as four numbers from 0 to 255, e.g. 10.101.100.101.")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
 
                 Picker("Network Interface", selection: $settings.eosInterfaceName) {
                     Text("Automatic (Let macOS Choose)").tag("")
@@ -122,6 +137,8 @@ struct SettingsView: View {
         // Closing Settings while still typing doesn't always move focus first.
         .onDisappear(perform: commitMainCueList)
     }
+
+    private var eosHost: String { settings.eosHost.trimmingCharacters(in: .whitespaces) }
 
     /// Checks the Main Cuelist field once the user is done with it. Only valid numbers are saved;
     /// otherwise the error stays up and the last valid number keeps being used.

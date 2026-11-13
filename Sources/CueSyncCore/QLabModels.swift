@@ -1,5 +1,12 @@
 import Foundation
 
+/// QLab's OSC Access passcodes are four-digit numbers. Empty means connect without one.
+public enum QLabPasscode {
+    public static func isValid(_ text: String) -> Bool {
+        text.isEmpty || (text.count == 4 && text.allSatisfy { $0.isASCII && $0.isNumber })
+    }
+}
+
 /// A reply from QLab: `/reply/{invoked address}` with one JSON string argument.
 public struct QLabReply {
     /// The address that was invoked, e.g. `/workspace/ABC/cueLists`.

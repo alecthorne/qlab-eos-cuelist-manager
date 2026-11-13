@@ -37,7 +37,7 @@ the **gear** button in the toolbar.
 | Setting | What to choose |
 | --- | --- |
 | Workspace | Leave as **The Only Open Workspace** if you only have one open. Otherwise pick the one to use. |
-| Passcode | Only needed if the workspace's OSC Access uses passcodes. |
+| Passcode | Only needed if the workspace's OSC Access uses passcodes. QLab passcodes are four digits. |
 | Cue List | The QLab cue list whose numbered cues Eos should match. Cues inside groups count too. |
 
 **Eos**

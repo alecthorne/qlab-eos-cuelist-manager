@@ -173,6 +173,10 @@ final class EosClient: ObservableObject {
             status = .notConfigured("Enter the Eos console's IP address in Settings")
             return
         }
+        guard EosDefaults.isIPv4Address(host) else {
+            status = .notConfigured("The Eos IP address isn't valid. Check it in Settings.")
+            return
+        }
 
         var interface: NWInterface?
         if !config.interfaceName.isEmpty {
