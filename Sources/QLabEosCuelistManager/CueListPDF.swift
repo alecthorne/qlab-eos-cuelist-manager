@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// A printable list of QLab cues: the workspace and cue list names at the top, then one
 /// "• number - name" line per cue. Pages after the first get a smaller one-line header, and
-/// every page has the export date and "Page X of Y" at the bottom.
+/// every page has the export date and time and "Page X of Y" at the bottom.
 struct CueListPDF {
     let workspaceName: String
     let cueListName: String
@@ -116,7 +116,7 @@ struct CueListPDF {
         let y = paperSize.height - margin + 18
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        formatter.timeStyle = .none
+        formatter.timeStyle = .short
         draw(NSAttributedString(string: "Exported \(formatter.string(from: date))",
                                 attributes: attributes(font: footerFont)), at: y)
         draw(NSAttributedString(string: "Page \(page) of \(pageCount)",
