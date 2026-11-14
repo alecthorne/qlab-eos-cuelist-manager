@@ -58,6 +58,8 @@ struct ComparisonPane: View {
                                 .foregroundStyle(row.status == .labelDiffers ? Color.orange : Color.primary)
                         }
                     }
+                    // Keeps the table off the divider between the cue list and Changes to Approve.
+                    .padding(.trailing, Layout.rowGap)
                 }
                 .frame(minWidth: 520)
 
