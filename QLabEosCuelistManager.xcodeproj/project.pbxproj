@@ -18,6 +18,7 @@
 		7003FB6330A8E53D00E98C76 /* ComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5330A8E53D00E98C76 /* ComparisonView.swift */; };
 		7003FB6430A8E53D00E98C76 /* ConnectionLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */; };
 		7003FB6530A8E53D00E98C76 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5530A8E53D00E98C76 /* ContentView.swift */; };
+		7003FB6630A8E53D00E98C76 /* CueListPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5630A8E53D00E98C76 /* CueListPDF.swift */; };
 		7003FB6730A8E53D00E98C76 /* EosClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5730A8E53D00E98C76 /* EosClient.swift */; };
 		7003FB6830A8E53D00E98C76 /* NetworkInterfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */; };
 		7003FB6930A8E53D00E98C76 /* OSCTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */; };
@@ -25,6 +26,7 @@
 		7003FB6B30A8E53D00E98C76 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5B30A8E53D00E98C76 /* SettingsView.swift */; };
 		7003FB7630A8E54100E98C76 /* BoundedLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6C30A8E54100E98C76 /* BoundedLog.swift */; };
 		7003FB7730A8E54100E98C76 /* CueComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6D30A8E54100E98C76 /* CueComparison.swift */; };
+		7003FB7830A8E54100E98C76 /* CueSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6E30A8E54100E98C76 /* CueSheet.swift */; };
 		7003FB7930A8E54100E98C76 /* EosChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6F30A8E54100E98C76 /* EosChanges.swift */; };
 		7003FB7A30A8E54100E98C76 /* EosDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7030A8E54100E98C76 /* EosDefaults.swift */; };
 		7003FB7B30A8E54100E98C76 /* EosModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7130A8E54100E98C76 /* EosModels.swift */; };
@@ -32,6 +34,7 @@
 		7003FB7D30A8E54100E98C76 /* OSCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7330A8E54100E98C76 /* OSCMessage.swift */; };
 		7003FB7E30A8E54100E98C76 /* QLabModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7430A8E54100E98C76 /* QLabModels.swift */; };
 		7003FB8630A8E54400E98C76 /* CueComparisonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */; };
+		7003FB8730A8E54400E98C76 /* CueSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8030A8E54400E98C76 /* CueSheetTests.swift */; };
 		7003FB8830A8E54400E98C76 /* EosChangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8130A8E54400E98C76 /* EosChangeTests.swift */; };
 		7003FB8930A8E54400E98C76 /* EosDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */; };
 		7003FB8A30A8E54400E98C76 /* OSCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8330A8E54400E98C76 /* OSCTests.swift */; };
@@ -70,6 +73,7 @@
 		7003FB5330A8E53D00E98C76 /* ComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonView.swift; sourceTree = "<group>"; };
 		7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionLog.swift; sourceTree = "<group>"; };
 		7003FB5530A8E53D00E98C76 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7003FB5630A8E53D00E98C76 /* CueListPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueListPDF.swift; sourceTree = "<group>"; };
 		7003FB5730A8E53D00E98C76 /* EosClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosClient.swift; sourceTree = "<group>"; };
 		7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkInterfaces.swift; sourceTree = "<group>"; };
 		7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCTCPConnection.swift; sourceTree = "<group>"; };
@@ -77,6 +81,7 @@
 		7003FB5B30A8E53D00E98C76 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7003FB6C30A8E54100E98C76 /* BoundedLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedLog.swift; sourceTree = "<group>"; };
 		7003FB6D30A8E54100E98C76 /* CueComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueComparison.swift; sourceTree = "<group>"; };
+		7003FB6E30A8E54100E98C76 /* CueSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSheet.swift; sourceTree = "<group>"; };
 		7003FB6F30A8E54100E98C76 /* EosChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosChanges.swift; sourceTree = "<group>"; };
 		7003FB7030A8E54100E98C76 /* EosDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosDefaults.swift; sourceTree = "<group>"; };
 		7003FB7130A8E54100E98C76 /* EosModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosModels.swift; sourceTree = "<group>"; };
@@ -84,6 +89,7 @@
 		7003FB7330A8E54100E98C76 /* OSCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCMessage.swift; sourceTree = "<group>"; };
 		7003FB7430A8E54100E98C76 /* QLabModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QLabModels.swift; sourceTree = "<group>"; };
 		7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueComparisonTests.swift; sourceTree = "<group>"; };
+		7003FB8030A8E54400E98C76 /* CueSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSheetTests.swift; sourceTree = "<group>"; };
 		7003FB8130A8E54400E98C76 /* EosChangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosChangeTests.swift; sourceTree = "<group>"; };
 		7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosDefaultsTests.swift; sourceTree = "<group>"; };
 		7003FB8330A8E54400E98C76 /* OSCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCTests.swift; sourceTree = "<group>"; };
@@ -145,6 +151,7 @@
 				7003FB5330A8E53D00E98C76 /* ComparisonView.swift */,
 				7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */,
 				7003FB5530A8E53D00E98C76 /* ContentView.swift */,
+				7003FB5630A8E53D00E98C76 /* CueListPDF.swift */,
 				7003FB5730A8E53D00E98C76 /* EosClient.swift */,
 				7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */,
 				7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */,
@@ -160,6 +167,7 @@
 			children = (
 				7003FB6C30A8E54100E98C76 /* BoundedLog.swift */,
 				7003FB6D30A8E54100E98C76 /* CueComparison.swift */,
+				7003FB6E30A8E54100E98C76 /* CueSheet.swift */,
 				7003FB6F30A8E54100E98C76 /* EosChanges.swift */,
 				7003FB7030A8E54100E98C76 /* EosDefaults.swift */,
 				7003FB7130A8E54100E98C76 /* EosModels.swift */,
@@ -175,6 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */,
+				7003FB8030A8E54400E98C76 /* CueSheetTests.swift */,
 				7003FB8130A8E54400E98C76 /* EosChangeTests.swift */,
 				7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */,
 				7003FB8330A8E54400E98C76 /* OSCTests.swift */,
@@ -299,6 +308,7 @@
 				7003FB6330A8E53D00E98C76 /* ComparisonView.swift in Sources */,
 				7003FB6430A8E53D00E98C76 /* ConnectionLog.swift in Sources */,
 				7003FB6530A8E53D00E98C76 /* ContentView.swift in Sources */,
+				7003FB6630A8E53D00E98C76 /* CueListPDF.swift in Sources */,
 				7003FB6730A8E53D00E98C76 /* EosClient.swift in Sources */,
 				7003FB6830A8E53D00E98C76 /* NetworkInterfaces.swift in Sources */,
 				7003FB6930A8E53D00E98C76 /* OSCTCPConnection.swift in Sources */,
@@ -311,6 +321,7 @@
 			files = (
 				7003FB7630A8E54100E98C76 /* BoundedLog.swift in Sources */,
 				7003FB7730A8E54100E98C76 /* CueComparison.swift in Sources */,
+				7003FB7830A8E54100E98C76 /* CueSheet.swift in Sources */,
 				7003FB7930A8E54100E98C76 /* EosChanges.swift in Sources */,
 				7003FB7A30A8E54100E98C76 /* EosDefaults.swift in Sources */,
 				7003FB7B30A8E54100E98C76 /* EosModels.swift in Sources */,
@@ -323,6 +334,7 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				7003FB8630A8E54400E98C76 /* CueComparisonTests.swift in Sources */,
+				7003FB8730A8E54400E98C76 /* CueSheetTests.swift in Sources */,
 				7003FB8830A8E54400E98C76 /* EosChangeTests.swift in Sources */,
 				7003FB8930A8E54400E98C76 /* EosDefaultsTests.swift in Sources */,
 				7003FB8A30A8E54400E98C76 /* OSCTests.swift in Sources */,
