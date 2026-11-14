@@ -17,7 +17,7 @@ struct ApprovalPanel: View {
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Changes to Approve").font(.headline)
+                Text("Changes to Approve").font(.title2.bold())
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)
             }

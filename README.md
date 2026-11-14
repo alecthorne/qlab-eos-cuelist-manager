@@ -58,8 +58,8 @@ The first time the app connects to Eos, macOS asks whether it may find devices o
 
 The top of the window shows both connections side by side:
 
-- **QLab Connection**: the workspace and cue list in use.
-- **Eos Connection**: the show file and the cue list being synced (**Video Cuelist**). If that cue
+- **QLab**: the workspace and cue list in use.
+- **Eos**: the show file and the cue list being synced (**Video Cuelist**). If that cue
   list doesn't exist on the console yet, it says **Cuelist not found in console** in red.
 
 The dot next to each title is green when connected, yellow while connecting, and red if there's a

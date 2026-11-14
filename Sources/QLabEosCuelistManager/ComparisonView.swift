@@ -17,7 +17,7 @@ struct ComparisonPane: View {
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Cues").font(.headline)
+                    Text("Cues").font(.title2.bold())
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
 
