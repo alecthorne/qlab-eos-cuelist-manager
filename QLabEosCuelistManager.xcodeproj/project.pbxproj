@@ -9,6 +9,33 @@
 /* Begin PBXBuildFile section */
 		000000000000000000000130 /* libCueSyncCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000121 /* libCueSyncCore.a */; };
 		000000000000000000000131 /* libCueSyncCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000121 /* libCueSyncCore.a */; };
+		7003FB5D30A8E53D00E98C76 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7003FB5130A8E53D00E98C76 /* Assets.xcassets */; };
+		7003FB5E30A8E53D00E98C76 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB4D30A8E53D00E98C76 /* App.swift */; };
+		7003FB5F30A8E53D00E98C76 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB4E30A8E53D00E98C76 /* AppModel.swift */; };
+		7003FB6030A8E53D00E98C76 /* ApprovalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB4F30A8E53D00E98C76 /* ApprovalViews.swift */; };
+		7003FB6130A8E53D00E98C76 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5030A8E53D00E98C76 /* AppSettings.swift */; };
+		7003FB6230A8E53D00E98C76 /* ChangeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5230A8E53D00E98C76 /* ChangeController.swift */; };
+		7003FB6330A8E53D00E98C76 /* ComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5330A8E53D00E98C76 /* ComparisonView.swift */; };
+		7003FB6430A8E53D00E98C76 /* ConnectionLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */; };
+		7003FB6530A8E53D00E98C76 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5530A8E53D00E98C76 /* ContentView.swift */; };
+		7003FB6730A8E53D00E98C76 /* EosClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5730A8E53D00E98C76 /* EosClient.swift */; };
+		7003FB6830A8E53D00E98C76 /* NetworkInterfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */; };
+		7003FB6930A8E53D00E98C76 /* OSCTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */; };
+		7003FB6A30A8E53D00E98C76 /* QLabClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5A30A8E53D00E98C76 /* QLabClient.swift */; };
+		7003FB6B30A8E53D00E98C76 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB5B30A8E53D00E98C76 /* SettingsView.swift */; };
+		7003FB7630A8E54100E98C76 /* BoundedLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6C30A8E54100E98C76 /* BoundedLog.swift */; };
+		7003FB7730A8E54100E98C76 /* CueComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6D30A8E54100E98C76 /* CueComparison.swift */; };
+		7003FB7930A8E54100E98C76 /* EosChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB6F30A8E54100E98C76 /* EosChanges.swift */; };
+		7003FB7A30A8E54100E98C76 /* EosDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7030A8E54100E98C76 /* EosDefaults.swift */; };
+		7003FB7B30A8E54100E98C76 /* EosModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7130A8E54100E98C76 /* EosModels.swift */; };
+		7003FB7C30A8E54100E98C76 /* OSCFraming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7230A8E54100E98C76 /* OSCFraming.swift */; };
+		7003FB7D30A8E54100E98C76 /* OSCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7330A8E54100E98C76 /* OSCMessage.swift */; };
+		7003FB7E30A8E54100E98C76 /* QLabModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7430A8E54100E98C76 /* QLabModels.swift */; };
+		7003FB8630A8E54400E98C76 /* CueComparisonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */; };
+		7003FB8830A8E54400E98C76 /* EosChangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8130A8E54400E98C76 /* EosChangeTests.swift */; };
+		7003FB8930A8E54400E98C76 /* EosDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */; };
+		7003FB8A30A8E54400E98C76 /* OSCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8330A8E54400E98C76 /* OSCTests.swift */; };
+		7003FB8B30A8E54400E98C76 /* ProtocolParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8430A8E54400E98C76 /* ProtocolParsingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,25 +61,34 @@
 		000000000000000000000122 /* CueSyncCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueSyncCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000140 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		000000000000000000000141 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		7003FB4D30A8E53D00E98C76 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		7003FB4E30A8E53D00E98C76 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		7003FB4F30A8E53D00E98C76 /* ApprovalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalViews.swift; sourceTree = "<group>"; };
+		7003FB5030A8E53D00E98C76 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		7003FB5130A8E53D00E98C76 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7003FB5230A8E53D00E98C76 /* ChangeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeController.swift; sourceTree = "<group>"; };
+		7003FB5330A8E53D00E98C76 /* ComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonView.swift; sourceTree = "<group>"; };
+		7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionLog.swift; sourceTree = "<group>"; };
+		7003FB5530A8E53D00E98C76 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7003FB5730A8E53D00E98C76 /* EosClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosClient.swift; sourceTree = "<group>"; };
+		7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkInterfaces.swift; sourceTree = "<group>"; };
+		7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCTCPConnection.swift; sourceTree = "<group>"; };
+		7003FB5A30A8E53D00E98C76 /* QLabClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QLabClient.swift; sourceTree = "<group>"; };
+		7003FB5B30A8E53D00E98C76 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		7003FB6C30A8E54100E98C76 /* BoundedLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedLog.swift; sourceTree = "<group>"; };
+		7003FB6D30A8E54100E98C76 /* CueComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueComparison.swift; sourceTree = "<group>"; };
+		7003FB6F30A8E54100E98C76 /* EosChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosChanges.swift; sourceTree = "<group>"; };
+		7003FB7030A8E54100E98C76 /* EosDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosDefaults.swift; sourceTree = "<group>"; };
+		7003FB7130A8E54100E98C76 /* EosModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosModels.swift; sourceTree = "<group>"; };
+		7003FB7230A8E54100E98C76 /* OSCFraming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCFraming.swift; sourceTree = "<group>"; };
+		7003FB7330A8E54100E98C76 /* OSCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCMessage.swift; sourceTree = "<group>"; };
+		7003FB7430A8E54100E98C76 /* QLabModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QLabModels.swift; sourceTree = "<group>"; };
+		7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueComparisonTests.swift; sourceTree = "<group>"; };
+		7003FB8130A8E54400E98C76 /* EosChangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosChangeTests.swift; sourceTree = "<group>"; };
+		7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosDefaultsTests.swift; sourceTree = "<group>"; };
+		7003FB8330A8E54400E98C76 /* OSCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCTests.swift; sourceTree = "<group>"; };
+		7003FB8430A8E54400E98C76 /* ProtocolParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolParsingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		000000000000000000000010 /* Sources/QLabEosCuelistManager */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Sources/QLabEosCuelistManager;
-			sourceTree = "<group>";
-		};
-		000000000000000000000011 /* Sources/CueSyncCore */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Sources/CueSyncCore;
-			sourceTree = "<group>";
-		};
-		000000000000000000000012 /* Tests/CueSyncCoreTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Tests/CueSyncCoreTests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000130000000 /* Frameworks */ = {
@@ -80,9 +116,9 @@
 			children = (
 				000000000000000000000140 /* README.md */,
 				000000000000000000000141 /* Package.swift */,
-				000000000000000000000010 /* Sources/QLabEosCuelistManager */,
-				000000000000000000000011 /* Sources/CueSyncCore */,
-				000000000000000000000012 /* Tests/CueSyncCoreTests */,
+				7003FB5C30A8E53D00E98C76 /* QLabEosCuelistManager */,
+				7003FB7530A8E54100E98C76 /* CueSyncCore */,
+				7003FB8530A8E54400E98C76 /* CueSyncCoreTests */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,6 +131,57 @@
 				000000000000000000000122 /* CueSyncCoreTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		7003FB5C30A8E53D00E98C76 /* QLabEosCuelistManager */ = {
+			isa = PBXGroup;
+			children = (
+				7003FB4D30A8E53D00E98C76 /* App.swift */,
+				7003FB4E30A8E53D00E98C76 /* AppModel.swift */,
+				7003FB4F30A8E53D00E98C76 /* ApprovalViews.swift */,
+				7003FB5030A8E53D00E98C76 /* AppSettings.swift */,
+				7003FB5130A8E53D00E98C76 /* Assets.xcassets */,
+				7003FB5230A8E53D00E98C76 /* ChangeController.swift */,
+				7003FB5330A8E53D00E98C76 /* ComparisonView.swift */,
+				7003FB5430A8E53D00E98C76 /* ConnectionLog.swift */,
+				7003FB5530A8E53D00E98C76 /* ContentView.swift */,
+				7003FB5730A8E53D00E98C76 /* EosClient.swift */,
+				7003FB5830A8E53D00E98C76 /* NetworkInterfaces.swift */,
+				7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */,
+				7003FB5A30A8E53D00E98C76 /* QLabClient.swift */,
+				7003FB5B30A8E53D00E98C76 /* SettingsView.swift */,
+			);
+			name = QLabEosCuelistManager;
+			path = Sources/QLabEosCuelistManager;
+			sourceTree = "<group>";
+		};
+		7003FB7530A8E54100E98C76 /* CueSyncCore */ = {
+			isa = PBXGroup;
+			children = (
+				7003FB6C30A8E54100E98C76 /* BoundedLog.swift */,
+				7003FB6D30A8E54100E98C76 /* CueComparison.swift */,
+				7003FB6F30A8E54100E98C76 /* EosChanges.swift */,
+				7003FB7030A8E54100E98C76 /* EosDefaults.swift */,
+				7003FB7130A8E54100E98C76 /* EosModels.swift */,
+				7003FB7230A8E54100E98C76 /* OSCFraming.swift */,
+				7003FB7330A8E54100E98C76 /* OSCMessage.swift */,
+				7003FB7430A8E54100E98C76 /* QLabModels.swift */,
+			);
+			name = CueSyncCore;
+			path = Sources/CueSyncCore;
+			sourceTree = "<group>";
+		};
+		7003FB8530A8E54400E98C76 /* CueSyncCoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				7003FB7F30A8E54400E98C76 /* CueComparisonTests.swift */,
+				7003FB8130A8E54400E98C76 /* EosChangeTests.swift */,
+				7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */,
+				7003FB8330A8E54400E98C76 /* OSCTests.swift */,
+				7003FB8430A8E54400E98C76 /* ProtocolParsingTests.swift */,
+			);
+			name = CueSyncCoreTests;
+			path = Tests/CueSyncCoreTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -113,9 +200,6 @@
 			dependencies = (
 				000000000000000150000000 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				000000000000000000000010 /* Sources/QLabEosCuelistManager */,
-			);
 			name = QLabEosCuelistManager;
 			productName = QLabEosCuelistManager;
 			productReference = 000000000000000000000120 /* QLab → Eos CueSync.app */;
@@ -129,9 +213,6 @@
 				000000000000000230000000 /* Frameworks */,
 			);
 			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				000000000000000000000011 /* Sources/CueSyncCore */,
 			);
 			name = CueSyncCore;
 			productName = CueSyncCore;
@@ -149,9 +230,6 @@
 			);
 			dependencies = (
 				000000000000000350000000 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				000000000000000000000012 /* Tests/CueSyncCoreTests */,
 			);
 			name = CueSyncCoreTests;
 			productName = CueSyncCoreTests;
@@ -204,6 +282,7 @@
 		000000000000000140000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				7003FB5D30A8E53D00E98C76 /* Assets.xcassets in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -212,16 +291,42 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				7003FB5E30A8E53D00E98C76 /* App.swift in Sources */,
+				7003FB5F30A8E53D00E98C76 /* AppModel.swift in Sources */,
+				7003FB6030A8E53D00E98C76 /* ApprovalViews.swift in Sources */,
+				7003FB6130A8E53D00E98C76 /* AppSettings.swift in Sources */,
+				7003FB6230A8E53D00E98C76 /* ChangeController.swift in Sources */,
+				7003FB6330A8E53D00E98C76 /* ComparisonView.swift in Sources */,
+				7003FB6430A8E53D00E98C76 /* ConnectionLog.swift in Sources */,
+				7003FB6530A8E53D00E98C76 /* ContentView.swift in Sources */,
+				7003FB6730A8E53D00E98C76 /* EosClient.swift in Sources */,
+				7003FB6830A8E53D00E98C76 /* NetworkInterfaces.swift in Sources */,
+				7003FB6930A8E53D00E98C76 /* OSCTCPConnection.swift in Sources */,
+				7003FB6A30A8E53D00E98C76 /* QLabClient.swift in Sources */,
+				7003FB6B30A8E53D00E98C76 /* SettingsView.swift in Sources */,
 			);
 		};
 		000000000000000220000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				7003FB7630A8E54100E98C76 /* BoundedLog.swift in Sources */,
+				7003FB7730A8E54100E98C76 /* CueComparison.swift in Sources */,
+				7003FB7930A8E54100E98C76 /* EosChanges.swift in Sources */,
+				7003FB7A30A8E54100E98C76 /* EosDefaults.swift in Sources */,
+				7003FB7B30A8E54100E98C76 /* EosModels.swift in Sources */,
+				7003FB7C30A8E54100E98C76 /* OSCFraming.swift in Sources */,
+				7003FB7D30A8E54100E98C76 /* OSCMessage.swift in Sources */,
+				7003FB7E30A8E54100E98C76 /* QLabModels.swift in Sources */,
 			);
 		};
 		000000000000000320000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				7003FB8630A8E54400E98C76 /* CueComparisonTests.swift in Sources */,
+				7003FB8830A8E54400E98C76 /* EosChangeTests.swift in Sources */,
+				7003FB8930A8E54400E98C76 /* EosDefaultsTests.swift in Sources */,
+				7003FB8A30A8E54400E98C76 /* OSCTests.swift in Sources */,
+				7003FB8B30A8E54400E98C76 /* ProtocolParsingTests.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
