@@ -95,7 +95,7 @@ struct ContentView: View {
 struct ConnectionsHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Connections").font(.headline)
+            Text("Connections").font(.title2.bold())
                 .padding(.horizontal, 12)
             HStack(alignment: .top, spacing: 0) {
                 QLabConnectionColumn()
@@ -119,7 +119,7 @@ struct QLabConnectionColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            ConnectionTitle(title: "QLab Connection", color: statusColor, detail: statusDetail)
+            ConnectionTitle(title: "QLab", color: statusColor, detail: statusDetail)
             DetailLine(label: "Workspace:", value: qlab.connectedWorkspace?.displayName ?? "—")
             DetailLine(label: "Cue List:", value: cueList.text, isError: cueList.isError)
         }
@@ -160,7 +160,7 @@ struct EosConnectionColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            ConnectionTitle(title: "Eos Connection", color: statusColor, detail: statusDetail)
+            ConnectionTitle(title: "Eos", color: statusColor, detail: statusDetail)
                 .help(eos.version.isEmpty ? "" : "Eos v\(eos.version)")
             DetailLine(label: "Showfile:", value: eos.showName.isEmpty ? "—" : eos.showName)
             DetailLine(label: "Video Cuelist:", value: videoCueList.text, isError: videoCueList.isError)
@@ -228,7 +228,7 @@ extension ToolbarContent {
     }
 }
 
-/// "● QLab Connection", in bold, with the reason after it when not connected.
+/// "● QLab", in bold, with the reason after it when not connected.
 private struct ConnectionTitle: View {
     let title: String
     let color: Color
