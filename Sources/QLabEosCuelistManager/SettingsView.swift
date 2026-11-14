@@ -94,8 +94,8 @@ struct SettingsView: View {
                 } label: {
                     Text("Network Interface")
                     settingNote(settings.eosInterfaceChosen
-                                ? "Chosen by you."
-                                : "Default: the interface with a 10.101.x.x address, or Automatic if there isn't one.")
+                                ? "Currently user-selected."
+                                : "Defaults to the interface with a 10.101.x.x address, or Automatic if there isn't one.")
                 }
                 Picker("Protocol", selection: $settings.eosFraming) {
                     Text("OSC 1.1 (TCP Port 3037)").tag(OSCTCPFraming.slip)
@@ -126,7 +126,7 @@ struct SettingsView: View {
                         settingNote("Enter a cuelist number from 1 to 999. Still using cuelist \(settings.eosMainCueList).",
                                     isError: true)
                     } else {
-                        settingNote("Primary cuelist to watch for the current cue.")
+                        settingNote("Primary cuelist to watch for the current active cue.")
                     }
                 }
 

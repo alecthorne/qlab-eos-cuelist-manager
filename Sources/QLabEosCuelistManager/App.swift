@@ -12,11 +12,30 @@ struct QLabEosCuelistManagerApp: App {
                 .environmentObjects(model)
                 .frame(minWidth: 900, minHeight: 520)
         }
+        .commands {
+            CommandGroup(after: .importExport) {
+                ExportCueListCommand(model: model, qlab: model.qlab, settings: model.settings)
+            }
+        }
         Settings {
             SettingsView()
                 .environmentObjects(model)
                 .frame(width: 560)
         }
+    }
+}
+
+/// File → Export Cue List as PDF…. Observes QLab and Settings so it is only enabled once
+/// there's a cue list to export.
+private struct ExportCueListCommand: View {
+    let model: AppModel
+    @ObservedObject var qlab: QLabClient
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        Button("Export Cue List as PDF…") { CueListExport.run(model) }
+            .keyboardShortcut("e")
+            .disabled(!CueListExport.isAvailable(model))
     }
 }
 

@@ -126,6 +126,14 @@ it. The app asks first: **Create a new Eos cue list?**
 - **Deletes are permanent.** Delete cards are red, and Approve All lists how many deletes it will
   send before you confirm.
 
+## Exporting a cue list
+
+**File → Export Cue List as PDF…** (⌘E), or the export button (a square with an up arrow) in the toolbar, saves a printable list
+of the QLab cue list in use: the workspace and cue list names at the top, then one line per
+numbered cue, such as `• 3.5 - Ghost enters`. Cues inside groups are included. Each page shows the
+export date and time and the page number at the bottom. It's available once QLab is connected and the cue list
+is found.
+
 ## Logs
 
 Two panels at the bottom of the window, both collapsed when the app opens. Click a title to expand it.

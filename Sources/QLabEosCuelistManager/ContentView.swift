@@ -42,6 +42,13 @@ struct ContentView: View {
             .hidingSharedBackground()
             ToolbarItemGroup {
                 Button {
+                    CueListExport.run(model)
+                } label: {
+                    Label("Export Cue List as PDF", systemImage: "square.and.arrow.up")
+                }
+                .help("Export Cue List as PDF")
+                .disabled(!CueListExport.isAvailable(model))
+                Button {
                     qlab.refreshCueLists()
                     if eos.status == .connected {
                         eos.refreshCues()
