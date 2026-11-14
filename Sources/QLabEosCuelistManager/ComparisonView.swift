@@ -17,12 +17,15 @@ struct ComparisonPane: View {
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Cues").font(.title2.bold())
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Cues").font(.title2.bold())
+                        Spacer()
+                        Summary(rows: rows)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
 
                     HStack(spacing: 16) {
-                        Summary(rows: rows)
                         Spacer()
                         if eos.isLoadingCues {
                             ProgressView().controlSize(.small)
@@ -30,7 +33,7 @@ struct ComparisonPane: View {
                         Toggle("Only Show Differences", isOn: $onlyDifferences)
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.bottom, 6)
 
                     Table(shown) {
                         TableColumn("QLab Cue Name") { row in
