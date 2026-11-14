@@ -58,8 +58,9 @@ struct ComparisonPane: View {
                                 .foregroundStyle(row.status == .labelDiffers ? Color.orange : Color.primary)
                         }
                     }
-                    // Keeps the table off the divider between the cue list and Changes to Approve.
-                    .padding(.trailing, Layout.rowGap)
+                    // Keeps the table off the divider to its right, and ends it level with the
+                    // Only Show Differences checkbox above.
+                    .padding(.trailing, Layout.edge)
                 }
                 .frame(minWidth: 520)
 
