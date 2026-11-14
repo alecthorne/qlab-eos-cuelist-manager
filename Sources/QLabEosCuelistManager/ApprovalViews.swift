@@ -16,13 +16,12 @@ struct ApprovalPanel: View {
         let sendable = visible.filter(controller.canSend)
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Changes to Approve").font(.title2.bold())
+            HStack(alignment: .firstTextBaseline) {
+                SectionHeading("Changes to Approve")
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, Layout.edge)
 
             HStack {
                 Button("Approve All") { confirmingApproveAll = true }
@@ -31,21 +30,22 @@ struct ApprovalPanel: View {
                     .disabled(labelEdits.isEmpty || controller.blockedReason != nil)
                 Spacer()
             }
-            .padding(.horizontal, 10)
-            .padding(.bottom, 6)
+            .frame(height: Layout.controlsRowHeight)
+            .padding(.horizontal, Layout.edge)
+            .padding(.bottom, Layout.rowGap)
 
             if let reason = controller.blockedReason {
                 Text(reason)
                     .font(.callout)
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.bottom, Layout.rowGap)
             } else if let error = controller.lastError {
                 Text(error)
                     .font(.callout)
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.bottom, Layout.rowGap)
             }
 
             if visible.isEmpty {
@@ -57,7 +57,8 @@ struct ApprovalPanel: View {
                             ChangeCard(change: change)
                         }
                     }
-                    .padding(10)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.vertical, 10)
                 }
             }
 
@@ -68,7 +69,8 @@ struct ApprovalPanel: View {
                     Spacer()
                     Button("Show Skipped") { controller.restoreSkipped() }
                 }
-                .padding(10)
+                .padding(.horizontal, Layout.edge)
+                .padding(.vertical, 10)
             }
         }
         .onChange(of: changes) { newValue in
@@ -243,7 +245,7 @@ struct ActionLogSection: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Layout.edge)
+        .padding(.vertical, Layout.rowGap)
     }
 }

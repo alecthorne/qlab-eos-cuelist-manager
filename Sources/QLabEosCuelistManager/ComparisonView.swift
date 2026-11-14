@@ -17,9 +17,8 @@ struct ComparisonPane: View {
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Cues").font(.title2.bold())
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
+                    SectionHeading("Cues")
+                        .padding(.horizontal, Layout.edge)
 
                     HStack(spacing: 16) {
                         Summary(rows: rows)
@@ -29,8 +28,9 @@ struct ComparisonPane: View {
                         }
                         Toggle("Only Show Differences", isOn: $onlyDifferences)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .frame(height: Layout.controlsRowHeight)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.bottom, Layout.rowGap)
 
                     Table(shown) {
                         TableColumn("QLab Cue Name") { row in
