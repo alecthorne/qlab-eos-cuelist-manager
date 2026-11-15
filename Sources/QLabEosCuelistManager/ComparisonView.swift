@@ -8,12 +8,15 @@ struct ComparisonPane: View {
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var eos: EosClient
     @State private var onlyDifferences = false
+    @State private var hideInvalidTargets = false
 
     var body: some View {
         if let notReady = model.comparisonNotReadyReason {
             Placeholder(text: notReady)
         } else {
-            let rows = model.comparisonRows ?? []
+            // Hiding invalid cue targets drops QLab cues whose numbers Eos can't fire (like
+            // "1A" or "Pre"), from the counts as well as the list.
+            let rows = (model.comparisonRows ?? []).filter { !hideInvalidTargets || $0.status != .invalidQLabNumber }
             let shown = onlyDifferences ? rows.filter(\.isMismatch) : rows
             HSplitView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -27,6 +30,8 @@ struct ComparisonPane: View {
                         if eos.isLoadingCues {
                             ProgressView().controlSize(.small)
                         }
+                        Toggle("Hide Invalid Cue Targets", isOn: $hideInvalidTargets)
+                            .help("Hide QLab cues whose numbers Eos can't trigger, like \u{201C}1A\u{201D} or \u{201C}Pre\u{201D}")
                         Toggle("Only Show Differences", isOn: $onlyDifferences)
                     }
                     .frame(height: Layout.controlsRowHeight)
@@ -317,7 +322,7 @@ struct StatusBadge: View {
         case .missingInEos: return "QLab has this cue number but Eos doesn't. You can approve adding it in the panel on the right."
         case .extraInEos: return "Eos has this cue but QLab doesn't. You can approve deleting it in the panel on the right."
         case .invalidQLabNumber: return "This QLab cue number can't be used as an Eos cue number (Eos needs a number like 12 or 12.5). Renumber it in QLab to sync it."
-        case .duplicateQLabNumber: return "More than one QLab cue has this number. Fix it in QLab; nothing will be synced for this number until then."
+        case .duplicateQLabNumber: return "Another QLab cue number is the same Eos cue number, like 4 and 4.0. Renumber one of them in QLab; nothing will be synced for this number until then."
         }
     }
 }

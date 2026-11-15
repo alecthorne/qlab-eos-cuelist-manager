@@ -244,6 +244,10 @@ as cue 1). They're shown in three panels side by side: **QLab** (cue number and 
 number. A green ▶ marks every QLab cue that's running (there can be several) and the active cue in
 the Eos video cuelist.
 
+The list is in cue number order, lowest first, which may not be the order the cues are in
+QLab. QLab cues with numbers that aren't numeric, like "1A" or "Pre", come last, in their QLab
+order. Eos can't trigger those cues anyway.
+
 | Status | Meaning | What the app offers |
 | --- | --- | --- |
 | Matches | Same number, and the Eos label equals the QLab name | Nothing to do |
@@ -251,10 +255,12 @@ the Eos video cuelist.
 | Missing in Eos | QLab has this number, Eos doesn't | Add a blank cue in Eos |
 | Not in QLab | Eos has this number, QLab doesn't | Delete the cue in Eos |
 | Not a Valid Eos Cue # | A QLab number Eos can't use, like "1A" or "Pre" | Nothing: renumber it in QLab |
-| Duplicate Number | Two QLab cues share the same number | Nothing: fix it in QLab |
+| Duplicate Number | Two QLab cue numbers are the same Eos cue number, like 4 and 4.0 | Nothing: renumber one in QLab |
 
 Hover over a status for a longer explanation. Turn on **Only Show Differences** to hide matching
-cues. The summary above the table counts each kind of difference.
+cues, and **Hide Invalid Cue Targets** to hide QLab cues Eos can't trigger (the **Not a Valid Eos
+Cue #** rows, like "1A" or "Pre"). The summary above the table counts each kind of difference
+among the cues shown.
 
 A few details:
 
