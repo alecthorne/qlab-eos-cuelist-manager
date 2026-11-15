@@ -7,7 +7,7 @@ struct QLabEosCuelistManagerApp: App {
     @StateObject private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("QLab → Eos CueSync") {
+        WindowGroup("QLab → Eos CueSync", id: MainWindowCommand.windowID) {
             ContentView()
                 .environmentObjects(model)
                 .frame(minWidth: 900, minHeight: 520)
@@ -15,6 +15,14 @@ struct QLabEosCuelistManagerApp: App {
         .commands {
             CommandGroup(after: .importExport) {
                 ExportCueListCommand(model: model, qlab: model.qlab, settings: model.settings)
+            }
+            CommandGroup(before: .windowList) {
+                MainWindowCommand()
+                Button("Active Eos Cues") {
+                    ActiveCuesWindowController.shared.show(model: model)
+                }
+                .keyboardShortcut("1")
+                Divider()
             }
             CommandGroup(replacing: .help) {
                 HelpCommand()
@@ -47,6 +55,31 @@ private struct ExportCueListCommand: View {
     }
 }
 
+/// Window › Main Window (⌘0): brings the main window to the front, or reopens it if it was
+/// closed (for example, leaving only the floating Active Eos Cues window open).
+private struct MainWindowCommand: View {
+    static let windowID = "main"
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Main Window") {
+            // SwiftUI names the group's windows "main-…"; reuse an open one rather than
+            // opening a second.
+            if let window = NSApp.windows.first(where: { window in
+                window.identifier?.rawValue.hasPrefix(Self.windowID) == true
+                    && (window.isVisible || window.isMiniaturized)
+            }) {
+                if window.isMiniaturized { window.deminiaturize(nil) }
+                window.makeKeyAndOrderFront(nil)
+            } else {
+                openWindow(id: Self.windowID)
+            }
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .keyboardShortcut("0")
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Needed when running straight from Swift Package Manager, which builds a bare
@@ -55,8 +88,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Quits when the last window closes, except while the floating Active Eos Cues window is
+    /// open: then the main window can be closed and the app keeps running. (Closing the
+    /// floating window last quits the app; see ActiveCuesWindowController.)
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        !ActiveCuesWindowController.shared.isOpen
     }
 }
 

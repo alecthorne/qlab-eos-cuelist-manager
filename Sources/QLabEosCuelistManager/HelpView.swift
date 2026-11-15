@@ -209,7 +209,7 @@ the **gear** button in the toolbar.
 | Network Interface | The network port on this Mac that's connected to the Eos network. Until you choose one, the app uses the port with a 10.101.x.x address. |
 | Protocol | Leave on **OSC 1.1 (TCP Port 3037)** unless you have a reason to use OSC 1.0 (port 3032). |
 | Video Cuelist to Sync | The number of the Eos cue list to keep in sync (1 to 999). There's deliberately no default, so the app can't touch the wrong list by accident. |
-| Main Cuelist | The cuelist whose current cue is shown in the toolbar (1 to 999). The default is **1**. |
+| Main Cuelist | The cuelist whose current cue is shown in the Active Eos Cues panel (1 to 999). The default is **1**. |
 | Send as Eos User | The Eos user the app types as. The default, **61**, keeps the app's commands off the operator's own command line. Leave it empty to use the console's current user. |
 
 The first time the app connects to Eos, macOS asks whether it may find devices on your local network. Click **Allow**, or it can't reach the console.
@@ -226,7 +226,13 @@ The top of the window shows both connections side by side:
 The dot next to each title is green when connected, yellow while connecting, and red if there's a
 problem (the reason is shown next to it).
 
-The toolbar shows the **Active Eos Cue (Main Cuelist)**, the cue Eos is playing back right now in the **Main Cuelist** chosen in Settings.
+While Eos is connected, the **Active Eos Cues** panel to the right of the connections shows the cue Eos
+is playing back right now in the **Main Cuelist** chosen in Settings, and in the **Video Cuelist**
+being synced. Click the panel, or choose **Window › Active Eos Cues** (⌘1), to open the same
+information in large type in a small floating window that stays on top of other apps, QLab
+included. While it's open you can close the main window and the app keeps running; choose
+**Window › Main Window** (⌘0) or click the app's Dock icon to bring the main window back. Both
+windows reopen at the size and position you left them.
 **Refresh** (↻) re-reads both cue lists, though you'll rarely need it: changes made in QLab or on
 the console show up on their own within a second or so.
 
