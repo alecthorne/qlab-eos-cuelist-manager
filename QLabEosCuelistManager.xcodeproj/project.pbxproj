@@ -463,7 +463,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = "0.2.5-beta";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alecthorne.QLabEosCuelistManager;
 				PRODUCT_MODULE_NAME = QLabEosCuelistManager;
 				PRODUCT_NAME = "QLab → Eos CueSync";
@@ -490,7 +490,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = "0.2.5-beta";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alecthorne.QLabEosCuelistManager;
 				PRODUCT_MODULE_NAME = QLabEosCuelistManager;
 				PRODUCT_NAME = "QLab → Eos CueSync";
