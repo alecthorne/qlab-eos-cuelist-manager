@@ -41,8 +41,9 @@ final class EosClient: ObservableObject {
     @Published private(set) var cuesLoaded = false
     /// The show's cue lists (number → label), or nil until they've been read.
     @Published private(set) var consoleCueLists: [Int: String]?
-    /// The active cue in any cue list, as Eos reports it.
-    @Published private(set) var activeCue: EosCueRef?
+    /// The active cue in each cue list (list number → cue number), from Eos's active cue
+    /// feed and its fire events. A list is removed when it's taken out (cue 0 fired).
+    @Published private(set) var activeCueByList: [Int: String] = [:]
     /// The current cue in `mainCueList`, e.g. "1/5 Lights up 3.0", or "" if not known yet.
     @Published private(set) var activeCueText = ""
     @Published private(set) var pendingCueText = ""
@@ -58,6 +59,8 @@ final class EosClient: ObservableObject {
     private var mainCueList = EosDefaults.mainCueList
     /// The latest /eos/out/active/cue/text, whichever cue list it was for.
     private var lastActiveText = ""
+    /// The cue Eos's active cue feed last named, whichever list it was in.
+    private var lastActiveFeedCue: EosCueRef?
     private var failedAttempts = 0
     private static let maxRetries = 5
 
@@ -106,7 +109,8 @@ final class EosClient: ObservableObject {
         showName = ""
         clearCues()
         consoleCueLists = nil
-        activeCue = nil
+        activeCueByList = [:]
+        lastActiveFeedCue = nil
         activeCueText = ""
         lastActiveText = ""
         pendingCueText = ""
@@ -281,11 +285,17 @@ final class EosClient: ObservableObject {
 
     // MARK: - Messages
 
+    /// Only publishes real changes, since progress updates repeat during every fade.
+    private func setActiveCue(_ number: String?, inList list: Int) {
+        guard activeCueByList[list] != number else { return }
+        activeCueByList[list] = number
+    }
+
     /// The cue list active cue text is for: from the text itself, or else from the
     /// /eos/out/active/cue/<list>/<cue> message that comes with it.
     private func activeTextList(_ text: String) -> Int? {
         guard !text.isEmpty else { return nil }
-        return EosActiveCueText.list(text) ?? activeCue?.list
+        return EosActiveCueText.list(text) ?? lastActiveFeedCue?.list
     }
 
     private func handle(_ message: OSCMessage) {
@@ -343,18 +353,27 @@ final class EosClient: ObservableObject {
                 cuesLoaded = true
             }
         case .activeCue(let list, let number, _):
-            activeCue = EosCueRef(list: list, number: number)
+            lastActiveFeedCue = EosCueRef(list: list, number: number)
+            setActiveCue(number, inList: list)
         case .activeCueText(let text):
             let wasMain = activeTextList(lastActiveText) == mainCueList
             lastActiveText = text
             if text.isEmpty {
-                activeCue = nil
+                if let cue = lastActiveFeedCue { setActiveCue(nil, inList: cue.list) }
+                lastActiveFeedCue = nil
                 if wasMain { activeCueText = "" }
             } else if activeTextList(text) == mainCueList {
                 activeCueText = text
             }
         case .cueFired(let list, let number, let label):
-            // Eos's active cue may follow another list, so fire events keep the main list current.
+            // Go To Cue Out / Go To Cue 0 fire cue 0: nothing is active in that list any more.
+            if EosCueOut.isOut(number) {
+                setActiveCue(nil, inList: list)
+                if list == mainCueList { activeCueText = "" }
+                return
+            }
+            // Eos's active cue feed may follow another list, so fire events keep every list current.
+            setActiveCue(number, inList: list)
             // Skipped when the active cue text (which also has the time) already shows this cue.
             let prefix = "\(list)/\(number)"
             guard list == mainCueList,

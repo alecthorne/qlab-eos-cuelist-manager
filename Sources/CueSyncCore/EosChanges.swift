@@ -31,7 +31,7 @@ public struct EosChange: Identifiable, Equatable {
     public var summary: String {
         switch kind {
         case .add:
-            return "Add cue \(list)/\(number) “\(label)”, time 0"
+            return "Add cue \(list)/\(number) “\(label)”"
         case .updateLabel:
             return "Change label of cue \(list)/\(number) from “\(currentLabel ?? "")” to “\(label)”"
         case .delete:
@@ -112,11 +112,12 @@ public enum EosCommand: Equatable {
 }
 
 public enum EosCommandBuilder {
-    /// The default command for creating a blank cue. `{list}` and `{cue}` are filled in.
-    /// Record Only stores only manual data, so with nothing manual on stage the cue is blank.
+    /// The default command for creating a blank cue with time 0. `{list}` and `{cue}` are filled in.
+    /// Record Only stores only manual data, so with nothing manual on stage the cue is blank, and
+    /// the time is set in the same command.
     /// Typed as text, Eos needs `Record_Only` (it ignores a separate "Only", which makes a plain
     /// Record of the whole stage) and spaces around the list separator (`16/1` is a syntax error).
-    public static let defaultAddTemplate = "Record_Only Cue {list} / {cue}#"
+    public static let defaultAddTemplate = "Record_Only Cue {list} / {cue} Time 0#"
 
     /// Fixes the two ways an add command is known to be misread by Eos, so custom commands work too:
     /// "Record Only" becomes `Record_Only`, and `{list}/{cue}` gets spaces around the slash.
@@ -135,7 +136,7 @@ public enum EosCommandBuilder {
             let create = normalizedAddTemplate(addTemplate)
                 .replacingOccurrences(of: "{list}", with: String(change.list))
                 .replacingOccurrences(of: "{cue}", with: change.number)
-            return [.line(create), .line("\(cue) Time 0#"), label]
+            return [.line(create), label]
         case .updateLabel:
             return [label]
         case .delete:

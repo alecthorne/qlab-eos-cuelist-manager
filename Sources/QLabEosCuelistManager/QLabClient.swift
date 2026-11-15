@@ -17,6 +17,9 @@ final class QLabClient: ObservableObject {
     @Published private(set) var connectedWorkspace: QLabWorkspace?
     /// Top-level cue lists of the connected workspace, with their cues.
     @Published private(set) var cueLists: [QLabCue] = []
+    /// Unique IDs of the cues running right now, including cues inside groups. Several can run
+    /// at once.
+    @Published private(set) var runningCueIDs: Set<String> = []
 
     private let log: ConnectionLog
     private var connection: OSCTCPConnection?
@@ -26,6 +29,7 @@ final class QLabClient: ObservableObject {
     private var reconnectWork: DispatchWorkItem?
     private var refreshWork: DispatchWorkItem?
     private var pollTimer: Timer?
+    private var runningCuesTimer: Timer?
 
     static let host = "127.0.0.1"
     static let port: UInt16 = 53000
@@ -47,6 +51,7 @@ final class QLabClient: ObservableObject {
         refreshWork?.cancel()
         pollTimer?.invalidate()
         pollTimer = nil
+        stopWatchingRunningCues()
         connection?.cancel()
         connection = nil
         pendingWorkspaceID = nil
@@ -103,6 +108,7 @@ final class QLabClient: ObservableObject {
             }
             pollTimer?.invalidate()
             pollTimer = nil
+            stopWatchingRunningCues()
             connection = nil
             pendingWorkspaceID = nil
             connectedWorkspace = nil
@@ -147,6 +153,11 @@ final class QLabClient: ObservableObject {
             } else {
                 log.add("QLab", "Could not read cue lists (\(reply.status)). Check the workspace's OSC access settings.")
             }
+        } else if reply.address.hasSuffix("/runningCues/uniqueIDs") {
+            guard reply.isOK, reply.workspaceID == nil || reply.workspaceID == connectedWorkspace?.id else { return }
+            let ids = QLabRunningCues.parseIDs(reply.data)
+            // Only publish real changes: this is asked for twice a second.
+            if ids != runningCueIDs { runningCueIDs = ids }
         } else if reply.address.hasSuffix("/updates"), !reply.isOK {
             // QLab only answers /updates when it refuses; a refusal means edits stop arriving silently.
             guard reply.workspaceID == nil || reply.workspaceID == connectedWorkspace?.id else { return }
@@ -171,6 +182,7 @@ final class QLabClient: ObservableObject {
             }
             connectedWorkspace = nil
             cueLists = []
+            stopWatchingRunningCues()
             pendingWorkspaceID = nil
             let reason: String
             if workspaces.isEmpty {
@@ -218,6 +230,30 @@ final class QLabClient: ObservableObject {
         }
         connection?.send(OSCMessage("/workspace/\(workspaceID)/updates", [.int(1)]))
         refreshCueLists()
+        startWatchingRunningCues()
+    }
+
+    // MARK: - Running cues
+
+    /// QLab doesn't promise to announce cues starting and stopping, so ask twice a second
+    /// (a tiny request on this Mac), and also straight away when QLab reports a change.
+    private func startWatchingRunningCues() {
+        runningCuesTimer?.invalidate()
+        requestRunningCues()
+        runningCuesTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.requestRunningCues()
+        }
+    }
+
+    private func stopWatchingRunningCues() {
+        runningCuesTimer?.invalidate()
+        runningCuesTimer = nil
+        if !runningCueIDs.isEmpty { runningCueIDs = [] }
+    }
+
+    private func requestRunningCues() {
+        guard let id = connectedWorkspace?.id else { return }
+        connection?.send(OSCMessage("/workspace/\(id)/runningCues/uniqueIDs"))
     }
 
     private func handleUpdate(_ message: OSCMessage) {
@@ -229,6 +265,8 @@ final class QLabClient: ObservableObject {
             start(workspaceID: desiredWorkspaceID, passcode: passcode)
             return
         }
+        // A cue may have started or stopped; check now rather than waiting for the next poll.
+        requestRunningCues()
         // Playhead moves don't change cue numbers or names.
         if parts.last == "playbackPosition" || parts.dropLast().last == "playbackPosition" { return }
         scheduleRefresh()

@@ -52,6 +52,15 @@ final class QLabParsingTests: XCTestCase {
         XCTAssertNil(QLabReply.connectPermissions("ok"))
     }
 
+    func testParsesRunningCueIDs() throws {
+        let json = #"{"workspace_id":"W1","address":"/workspace/W1/runningCues/uniqueIDs","status":"ok","data":["A","B"]}"#
+        let parsed = try XCTUnwrap(QLabReply.parse(OSCMessage("/reply/workspace/W1/runningCues/uniqueIDs", [.string(json)])))
+        XCTAssertEqual(QLabRunningCues.parseIDs(parsed.data), ["A", "B"])
+        XCTAssertEqual(QLabRunningCues.parseIDs([["uniqueID": "C"], ["uniqueID": "D"]]), ["C", "D"])
+        XCTAssertEqual(QLabRunningCues.parseIDs([]), [])
+        XCTAssertEqual(QLabRunningCues.parseIDs(nil), [])
+    }
+
     func testIgnoresNonReplies() {
         XCTAssertNil(QLabReply.parse(OSCMessage("/update/workspace/W1")))
         XCTAssertNil(QLabReply.parse(OSCMessage("/reply/x", [.string("not json")])))
@@ -123,6 +132,17 @@ final class EosParsingTests: XCTestCase {
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/event/cue/1/7/fire", [.string("Cue 7 Label")])),
                        .cueFired(list: 1, number: "7", label: "Cue 7 Label"))
         XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/event/cue/1/7/stop", [.string("Cue 7 Label")])), .other)
+    }
+
+    func testCueOutFiresCueZero() {
+        // What Eos sends after Go To Cue Out (or Go To Cue 0) on cue list 3.
+        XCTAssertEqual(EosOutput.parse(OSCMessage("/eos/out/event/cue/3/0/fire", [.string("")])),
+                       .cueFired(list: 3, number: "0", label: ""))
+        XCTAssertTrue(EosCueOut.isOut("0"))
+        XCTAssertTrue(EosCueOut.isOut("0.0"))
+        XCTAssertFalse(EosCueOut.isOut("1"))
+        XCTAssertFalse(EosCueOut.isOut("0.5"))
+        XCTAssertFalse(EosCueOut.isOut(""))
     }
 
     func testReadsListFromActiveCueText() {

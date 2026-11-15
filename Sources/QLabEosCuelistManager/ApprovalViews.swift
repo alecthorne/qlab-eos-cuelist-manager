@@ -15,37 +15,54 @@ struct ApprovalPanel: View {
         let skippedCount = changes.count - visible.count
         let sendable = visible.filter(controller.canSend)
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
+        let missingCues = sendable.filter { $0.kind == .add }
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Changes to Approve").font(.title2.bold())
+            HStack(alignment: .firstTextBaseline) {
+                SectionHeading("CHANGES TO APPROVE")
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, Layout.edge)
 
-            HStack {
-                Button("Approve All") { confirmingApproveAll = true }
-                    .disabled(sendable.isEmpty || controller.blockedReason != nil)
-                Button("Update All Eos Cue Labels") { controller.approve(labelEdits) }
-                    .disabled(labelEdits.isEmpty || controller.blockedReason != nil)
-                Spacer()
+            // One line when the panel is wide enough; otherwise the buttons wrap rather than
+            // having their labels cut off.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    approveAllButton(sendable)
+                    addMissingButton(missingCues)
+                    updateLabelsButton(labelEdits)
+                }
+                VStack(alignment: .leading) {
+                    approveAllButton(sendable)
+                    HStack {
+                        addMissingButton(missingCues)
+                        updateLabelsButton(labelEdits)
+                    }
+                }
+                VStack(alignment: .leading) {
+                    approveAllButton(sendable)
+                    addMissingButton(missingCues)
+                    updateLabelsButton(labelEdits)
+                }
             }
-            .padding(.horizontal, 10)
-            .padding(.bottom, 6)
+            .frame(maxWidth: .infinity, minHeight: Layout.controlsRowHeight, alignment: .leading)
+            // Takes the full height of however many lines the buttons need.
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, Layout.edge)
+            .padding(.bottom, Layout.rowGap)
 
             if let reason = controller.blockedReason {
                 Text(reason)
                     .font(.callout)
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.bottom, Layout.rowGap)
             } else if let error = controller.lastError {
                 Text(error)
                     .font(.callout)
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.bottom, Layout.rowGap)
             }
 
             if visible.isEmpty {
@@ -57,7 +74,8 @@ struct ApprovalPanel: View {
                             ChangeCard(change: change)
                         }
                     }
-                    .padding(10)
+                    .padding(.horizontal, Layout.edge)
+                    .padding(.vertical, 10)
                 }
             }
 
@@ -66,9 +84,10 @@ struct ApprovalPanel: View {
                 HStack {
                     Text("\(skippedCount) Skipped").foregroundStyle(.secondary)
                     Spacer()
-                    Button("Show Skipped") { controller.restoreSkipped() }
+                    Button("Restore Skipped") { controller.restoreSkipped() }
                 }
-                .padding(10)
+                .padding(.horizontal, Layout.edge)
+                .padding(.vertical, 10)
             }
         }
         .onChange(of: changes) { newValue in
@@ -99,6 +118,24 @@ struct ApprovalPanel: View {
         } message: {
             Text(Self.newCueListWarning(controller.cueListToCreate))
         }
+    }
+
+    // MARK: - Batch buttons
+
+    private func approveAllButton(_ sendable: [EosChange]) -> some View {
+        Button("Approve All") { confirmingApproveAll = true }
+            .disabled(sendable.isEmpty || controller.blockedReason != nil)
+    }
+
+    /// Asks first if adding would create a new Eos cue list, like any add.
+    private func addMissingButton(_ missingCues: [EosChange]) -> some View {
+        Button("Add Missing Eos Cues") { controller.approve(missingCues) }
+            .disabled(missingCues.isEmpty || controller.blockedReason != nil)
+    }
+
+    private func updateLabelsButton(_ labelEdits: [EosChange]) -> some View {
+        Button("Update Eos Cue Labels") { controller.approve(labelEdits) }
+            .disabled(labelEdits.isEmpty || controller.blockedReason != nil)
     }
 
     private static func newCueListWarning(_ list: Int?) -> String {
@@ -243,7 +280,7 @@ struct ActionLogSection: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Layout.edge)
+        .padding(.vertical, Layout.rowGap)
     }
 }

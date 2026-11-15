@@ -8,12 +8,14 @@ struct ContentView: View {
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var eos: EosClient
     @State private var showingSettings = false
+    /// Where the Eos panel in the cue list starts, so the Eos connection details can line up
+    /// with it. nil while the cue list isn't showing.
+    @State private var eosPanelX: CGFloat?
 
     var body: some View {
         VStack(spacing: 0) {
-            ConnectionsHeader()
+            ConnectionsHeader(eosColumnX: eosPanelX)
             Divider()
-                .padding(.vertical, 6)
 
             if eos.gaveUp {
                 Banner(text: "Can't connect to Eos. Check the IP address and network connection in Settings.",
@@ -79,6 +81,8 @@ struct ContentView: View {
             }
             .frame(width: 580, height: 720)
         }
+        .coordinateSpace(name: EosPanelXKey.coordinateSpace)
+        .onPreferenceChange(EosPanelXKey.self) { eosPanelX = $0 }
         .background(NoInitialFocus())
         .onAppear {
             model.startIfNeeded()
@@ -89,25 +93,90 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Layout
+
+/// Spacing shared by the main window's sections, so their edges and headings line up.
+enum Layout {
+    /// From the window edge (or a pane edge) to a section's content.
+    static let edge: CGFloat = 16
+    /// Above a section heading, so it reads as the start of a new section.
+    static let headingTop: CGFloat = 14
+    /// Below a section heading, so it groups with what follows.
+    static let headingBottom: CGFloat = 6
+    /// Between related rows in a section.
+    static let rowGap: CGFloat = 8
+    /// Between lines within a group, like a connection's details.
+    static let tight: CGFloat = 4
+    /// Below a section's last row, before the next divider.
+    static let sectionBottom: CGFloat = 14
+    /// Height of the controls row under the Cues and Changes to Approve headings, so the cue
+    /// table and the change list start at the same height (buttons are taller than a checkbox).
+    static let controlsRowHeight: CGFloat = 28
+}
+
+/// A section heading ("CONNECTIONS", "CUES", "CHANGES TO APPROVE") with the shared spacing.
+struct SectionHeading: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.title3.bold())
+            .padding(.top, Layout.headingTop)
+            .padding(.bottom, Layout.headingBottom)
+    }
+}
+
 // MARK: - Connections
+
+/// The left edge of the Eos panel in the cue list, in the main window's coordinates.
+/// The Connections section reads it to line the Eos details up with the Eos cues below.
+struct EosPanelXKey: PreferenceKey {
+    static let coordinateSpace = "mainWindow"
+    static var defaultValue: CGFloat? = nil
+
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = nextValue() ?? value
+    }
+}
 
 /// QLab and Eos connection details, side by side, at the top of the window.
 struct ConnectionsHeader: View {
+    /// Where the Eos panel below starts. When set, the Eos details start there too, with the
+    /// dividing line above the gap before it; otherwise the two halves are equal.
+    var eosColumnX: CGFloat?
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Connections").font(.title2.bold())
-                .padding(.horizontal, 12)
+        VStack(alignment: .leading, spacing: 0) {
+            SectionHeading("CONNECTIONS")
+                .padding(.horizontal, Layout.edge)
             HStack(alignment: .top, spacing: 0) {
-                QLabConnectionColumn()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
-                Divider()
-                EosConnectionColumn()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
+                if let eosColumnX {
+                    let halfGap = CueComparisonList.bandGap / 2
+                    QLabConnectionColumn()
+                        .padding(.leading, Layout.edge)
+                        .padding(.trailing, halfGap)
+                        .frame(width: max(eosColumnX - halfGap, 0), alignment: .leading)
+                    Divider()
+                    EosConnectionColumn()
+                        .padding(.leading, halfGap)
+                        .padding(.trailing, Layout.edge)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    QLabConnectionColumn()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Layout.edge)
+                    Divider()
+                    EosConnectionColumn()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Layout.edge)
+                }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.bottom, Layout.sectionBottom)
         .fixedSize(horizontal: false, vertical: true)
     }
 }
@@ -118,7 +187,7 @@ struct QLabConnectionColumn: View {
     @EnvironmentObject private var qlab: QLabClient
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: Layout.tight) {
             ConnectionTitle(title: "QLab", color: statusColor, detail: statusDetail)
             DetailLine(label: "Workspace:", value: qlab.connectedWorkspace?.displayName ?? "—")
             DetailLine(label: "Cue List:", value: cueList.text, isError: cueList.isError)
@@ -159,7 +228,7 @@ struct EosConnectionColumn: View {
     @EnvironmentObject private var eos: EosClient
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: Layout.tight) {
             ConnectionTitle(title: "Eos", color: statusColor, detail: statusDetail)
                 .help(eos.version.isEmpty ? "" : "Eos v\(eos.version)")
             DetailLine(label: "Showfile:", value: eos.showName.isEmpty ? "—" : eos.showName)
@@ -366,7 +435,8 @@ struct Banner: View {
             Spacer()
             Button(buttonTitle, action: action)
         }
-        .padding(10)
+        .padding(.horizontal, Layout.edge)
+        .padding(.vertical, 10)
         .background(Color.orange.opacity(0.12))
     }
 }
@@ -415,7 +485,7 @@ struct ConnectionLogSection: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Layout.edge)
+        .padding(.vertical, Layout.rowGap)
     }
 }

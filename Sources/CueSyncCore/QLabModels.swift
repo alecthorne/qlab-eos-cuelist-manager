@@ -42,6 +42,17 @@ public struct QLabReply {
     }
 }
 
+/// Parses the `data` of a `/runningCues/uniqueIDs` reply: the unique IDs of every running cue,
+/// including cues inside groups. Accepts plain ID strings or dictionaries with a "uniqueID".
+public enum QLabRunningCues {
+    public static func parseIDs(_ data: Any?) -> Set<String> {
+        guard let array = data as? [Any] else { return [] }
+        return Set(array.compactMap { item in
+            (item as? String) ?? ((item as? [String: Any])?["uniqueID"] as? String)
+        })
+    }
+}
+
 public struct QLabWorkspace: Identifiable, Hashable {
     public let id: String
     public let displayName: String

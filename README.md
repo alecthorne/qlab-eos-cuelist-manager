@@ -72,8 +72,10 @@ the console show up on their own within a second or so.
 ### Compare
 
 Every numbered QLab cue is lined up with the Eos cue of the same number (1, 1.0 and 01 all count
-as cue 1). The columns are **QLab Cue Name**, **QLab Cue #**, **Status**, **Eos Cue #** and
-**Eos Cue Label**, and a green ▶ marks the active Eos cue.
+as cue 1). They're shown in three panels side by side: **QLab** (cue number and name),
+**Status**, and **Eos** (cue number and label). A dash (—) means that side has no cue with that
+number. A green ▶ marks every QLab cue that's running (there can be several) and the active cue in
+the Eos video cuelist.
 
 | Status | Meaning | What the app offers |
 | --- | --- | --- |
@@ -104,9 +106,10 @@ press a button.
 | **Add Eos Cue** | Creates a blank cue with time 0 and the QLab name as its label. |
 | **Update Eos Cue Label** | Sets the Eos label to the QLab name. |
 | **Delete Eos Cue** (red) | Deletes the cue from Eos. |
-| **Skip** | Hides the change for now. **Show Skipped** brings skipped changes back. |
+| **Skip** | Hides the change for now. **Restore Skipped** brings skipped changes back. |
 | **Approve All** | Sends every change that isn't skipped, after a confirmation listing how many adds, label edits and deletes there are. |
-| **Update All Eos Cue Labels** | Sends just the label updates, straight away. |
+| **Add Missing Eos Cues** | Sends just the cue adds, straight away. If the Eos cue list doesn't exist yet, the app asks before creating it. |
+| **Update Eos Cue Labels** | Sends just the label updates, straight away. |
 
 After a change is sent, the app re-reads the Eos cue list to check it worked. When it has, the
 card disappears and the row turns **Matches**. If Eos still differs after about 6 seconds, the card
