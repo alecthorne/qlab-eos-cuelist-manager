@@ -17,7 +17,11 @@ struct ApprovalPanel: View {
         let labelEdits = sendable.filter { $0.kind == .updateLabel }
         let missingCues = sendable.filter { $0.kind == .add }
         VStack(alignment: .leading, spacing: 0) {
+            // The heading is centred in the panel: a hidden copy of the count on the left
+            // balances the real one on the right.
             HStack(alignment: .firstTextBaseline) {
+                Text("\(visible.count)").hidden()
+                Spacer()
                 SectionHeading("CHANGES TO APPROVE")
                 Spacer()
                 Text("\(visible.count)").foregroundStyle(.secondary)

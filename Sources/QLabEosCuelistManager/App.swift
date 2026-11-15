@@ -16,7 +16,15 @@ struct QLabEosCuelistManagerApp: App {
             CommandGroup(after: .importExport) {
                 ExportCueListCommand(model: model, qlab: model.qlab, settings: model.settings)
             }
+            CommandGroup(replacing: .help) {
+                HelpCommand()
+            }
         }
+        Window("QLab → Eos CueSync Help", id: HelpView.windowID) {
+            HelpView()
+                .frame(minWidth: 520, idealWidth: 720, minHeight: 400, idealHeight: 700)
+        }
+        .defaultSize(width: 720, height: 700)
         Settings {
             SettingsView()
                 .environmentObjects(model)

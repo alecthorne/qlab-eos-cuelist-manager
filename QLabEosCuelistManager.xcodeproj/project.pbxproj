@@ -39,6 +39,7 @@
 		7003FB8930A8E54400E98C76 /* EosDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */; };
 		7003FB8A30A8E54400E98C76 /* OSCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8330A8E54400E98C76 /* OSCTests.swift */; };
 		7003FB8B30A8E54400E98C76 /* ProtocolParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8430A8E54400E98C76 /* ProtocolParsingTests.swift */; };
+		7003FB8D30AA231500E98C76 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7003FB8C30AA231500E98C76 /* HelpView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +95,7 @@
 		7003FB8230A8E54400E98C76 /* EosDefaultsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EosDefaultsTests.swift; sourceTree = "<group>"; };
 		7003FB8330A8E54400E98C76 /* OSCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSCTests.swift; sourceTree = "<group>"; };
 		7003FB8430A8E54400E98C76 /* ProtocolParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolParsingTests.swift; sourceTree = "<group>"; };
+		7003FB8C30AA231500E98C76 /* HelpView.swift */ = {isa = PBXFileReference; path = HelpView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +159,7 @@
 				7003FB5930A8E53D00E98C76 /* OSCTCPConnection.swift */,
 				7003FB5A30A8E53D00E98C76 /* QLabClient.swift */,
 				7003FB5B30A8E53D00E98C76 /* SettingsView.swift */,
+				7003FB8C30AA231500E98C76 /* HelpView.swift */,
 			);
 			name = QLabEosCuelistManager;
 			path = Sources/QLabEosCuelistManager;
@@ -313,6 +316,7 @@
 				7003FB6830A8E53D00E98C76 /* NetworkInterfaces.swift in Sources */,
 				7003FB6930A8E53D00E98C76 /* OSCTCPConnection.swift in Sources */,
 				7003FB6A30A8E53D00E98C76 /* QLabClient.swift in Sources */,
+				7003FB8D30AA231500E98C76 /* HelpView.swift in Sources */,
 				7003FB6B30A8E53D00E98C76 /* SettingsView.swift in Sources */,
 			);
 		};
