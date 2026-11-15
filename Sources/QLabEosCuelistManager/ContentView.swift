@@ -8,10 +8,13 @@ struct ContentView: View {
     @EnvironmentObject private var qlab: QLabClient
     @EnvironmentObject private var eos: EosClient
     @State private var showingSettings = false
+    /// Where the Eos panel in the cue list starts, so the Eos connection details can line up
+    /// with it. nil while the cue list isn't showing.
+    @State private var eosPanelX: CGFloat?
 
     var body: some View {
         VStack(spacing: 0) {
-            ConnectionsHeader()
+            ConnectionsHeader(eosColumnX: eosPanelX)
             Divider()
 
             if eos.gaveUp {
@@ -78,6 +81,8 @@ struct ContentView: View {
             }
             .frame(width: 580, height: 720)
         }
+        .coordinateSpace(name: EosPanelXKey.coordinateSpace)
+        .onPreferenceChange(EosPanelXKey.self) { eosPanelX = $0 }
         .background(NoInitialFocus())
         .onAppear {
             model.startIfNeeded()
@@ -109,7 +114,7 @@ enum Layout {
     static let controlsRowHeight: CGFloat = 28
 }
 
-/// A section heading ("Connections", "Cues", "Changes to Approve") with the shared spacing.
+/// A section heading ("CONNECTIONS", "CUES", "CHANGES TO APPROVE") with the shared spacing.
 struct SectionHeading: View {
     let title: String
 
@@ -119,7 +124,7 @@ struct SectionHeading: View {
 
     var body: some View {
         Text(title)
-            .font(.title2.bold())
+            .font(.title3.bold())
             .padding(.top, Layout.headingTop)
             .padding(.bottom, Layout.headingBottom)
     }
@@ -127,20 +132,48 @@ struct SectionHeading: View {
 
 // MARK: - Connections
 
+/// The left edge of the Eos panel in the cue list, in the main window's coordinates.
+/// The Connections section reads it to line the Eos details up with the Eos cues below.
+struct EosPanelXKey: PreferenceKey {
+    static let coordinateSpace = "mainWindow"
+    static var defaultValue: CGFloat? = nil
+
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = nextValue() ?? value
+    }
+}
+
 /// QLab and Eos connection details, side by side, at the top of the window.
 struct ConnectionsHeader: View {
+    /// Where the Eos panel below starts. When set, the Eos details start there too, with the
+    /// dividing line above the gap before it; otherwise the two halves are equal.
+    var eosColumnX: CGFloat?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeading("Connections")
+            SectionHeading("CONNECTIONS")
                 .padding(.horizontal, Layout.edge)
             HStack(alignment: .top, spacing: 0) {
-                QLabConnectionColumn()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Layout.edge)
-                Divider()
-                EosConnectionColumn()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Layout.edge)
+                if let eosColumnX {
+                    let halfGap = CueComparisonList.bandGap / 2
+                    QLabConnectionColumn()
+                        .padding(.leading, Layout.edge)
+                        .padding(.trailing, halfGap)
+                        .frame(width: max(eosColumnX - halfGap, 0), alignment: .leading)
+                    Divider()
+                    EosConnectionColumn()
+                        .padding(.leading, halfGap)
+                        .padding(.trailing, Layout.edge)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    QLabConnectionColumn()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Layout.edge)
+                    Divider()
+                    EosConnectionColumn()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Layout.edge)
+                }
             }
         }
         .padding(.bottom, Layout.sectionBottom)

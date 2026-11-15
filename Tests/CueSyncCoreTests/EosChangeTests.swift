@@ -27,14 +27,14 @@ final class EosChangeTests: XCTestCase {
     func testAddCommandsCreateBlankCueWithTimeZeroAndLabel() {
         let change = EosChange(kind: .add, list: 3, number: "12.5", label: "Scene 2", currentLabel: nil)
         let commands = EosCommandBuilder.commands(for: change)
+        // The cue is created with time 0 in one command line, then labelled.
         XCTAssertEqual(commands.map(\.displayText), [
-            "Record_Only Cue 3 / 12.5#",
-            "Cue 3 / 12.5 Time 0#",
+            "Record_Only Cue 3 / 12.5 Time 0#",
             "Set label of cue 3/12.5 to “Scene 2”",
         ])
-        XCTAssertEqual(commands[0].message(user: nil), OSCMessage("/eos/newcmd", [.string("Record_Only Cue 3 / 12.5#")]))
+        XCTAssertEqual(commands[0].message(user: nil), OSCMessage("/eos/newcmd", [.string("Record_Only Cue 3 / 12.5 Time 0#")]))
         // Labels go to /eos/set as a string, never typed on the command line, whatever the user setting.
-        XCTAssertEqual(commands[2].message(user: 61),
+        XCTAssertEqual(commands[1].message(user: 61),
                        OSCMessage("/eos/set/cue/3/12.5/label", [.string("Scene 2")]))
     }
 

@@ -188,6 +188,14 @@ public enum EosOutput: Equatable {
     }
 }
 
+/// Cue 0 is how Eos reports a cue list being taken out: Go To Cue Out and Go To Cue 0 both
+/// send `/eos/out/event/cue/<list>/0/fire`.
+public enum EosCueOut {
+    public static func isOut(_ number: String) -> Bool {
+        Double(number.trimmingCharacters(in: .whitespaces)) == 0
+    }
+}
+
 /// The cue list an `/eos/out/active/cue/text` string is for, from its "<list>/<cue>" start,
 /// e.g. 5 for "5/2.5 Lights up 3.0 50%". nil if the text doesn't start that way.
 public enum EosActiveCueText {
