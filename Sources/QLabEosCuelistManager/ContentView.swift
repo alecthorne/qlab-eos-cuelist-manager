@@ -11,10 +11,13 @@ struct ContentView: View {
     /// Where the Eos panel in the cue list starts, so the Eos connection details can line up
     /// with it. nil while the cue list isn't showing.
     @State private var eosPanelX: CGFloat?
+    /// Where the Changes to Approve panel starts, so the Active Eos Cues panel above it can line
+    /// up with it. nil while the cue list isn't showing.
+    @State private var approvalPanelX: CGFloat?
 
     var body: some View {
         VStack(spacing: 0) {
-            ConnectionsHeader(eosColumnX: eosPanelX)
+            ConnectionsHeader(eosColumnX: eosPanelX, activeCueX: approvalPanelX)
             Divider()
 
             if eos.gaveUp {
@@ -38,10 +41,6 @@ struct ContentView: View {
             ConnectionLogSection()
         }
         .toolbar {
-            ToolbarItem {
-                ActiveCueBox()
-            }
-            .hidingSharedBackground()
             ToolbarItemGroup {
                 Button {
                     CueListExport.run(model)
@@ -83,7 +82,9 @@ struct ContentView: View {
         }
         .coordinateSpace(name: EosPanelXKey.coordinateSpace)
         .onPreferenceChange(EosPanelXKey.self) { eosPanelX = $0 }
+        .onPreferenceChange(ApprovalPanelXKey.self) { approvalPanelX = $0 }
         .background(NoInitialFocus())
+        .background(RemembersWindowFrame(name: "MainWindow"))
         .onAppear {
             model.startIfNeeded()
             if settings.eosCueList == nil || settings.eosHost.isEmpty {
@@ -114,18 +115,20 @@ enum Layout {
     static let controlsRowHeight: CGFloat = 28
 }
 
-/// A section heading ("CONNECTIONS", "CUES", "CHANGES TO APPROVE") with the shared spacing.
+/// A section heading ("CONNECTIONS", "ACTIVE EOS CUES", "CUES", "CHANGES TO APPROVE") with the shared spacing.
 struct SectionHeading: View {
     let title: String
+    var top = Layout.headingTop
 
-    init(_ title: String) {
+    init(_ title: String, top: CGFloat = Layout.headingTop) {
         self.title = title
+        self.top = top
     }
 
     var body: some View {
         Text(title)
             .font(.title3.bold())
-            .padding(.top, Layout.headingTop)
+            .padding(.top, top)
             .padding(.bottom, Layout.headingBottom)
     }
 }
@@ -143,13 +146,44 @@ struct EosPanelXKey: PreferenceKey {
     }
 }
 
-/// QLab and Eos connection details, side by side, at the top of the window.
+/// The left edge of the Changes to Approve panel, in the main window's coordinates.
+/// The Active Eos Cues panel above it starts there too.
+struct ApprovalPanelXKey: PreferenceKey {
+    static var defaultValue: CGFloat? = nil
+
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = nextValue() ?? value
+    }
+}
+
+/// QLab and Eos connection details, side by side, at the top of the window, with the Eos
+/// active cues to their right while Eos is connected.
 struct ConnectionsHeader: View {
     /// Where the Eos panel below starts. When set, the Eos details start there too, with the
     /// dividing line above the gap before it; otherwise the two halves are equal.
     var eosColumnX: CGFloat?
+    /// Where the Changes to Approve panel below starts. When set, the Active Eos Cues panel starts
+    /// there too, so the two are the same width and resize together.
+    var activeCueX: CGFloat?
+
+    @EnvironmentObject private var eos: EosClient
+
+    /// The Active Eos Cues panel's width when there's no Changes to Approve panel to line up with:
+    /// the Changes to Approve panel's ideal width.
+    private static let activeCueWidth: CGFloat = 360
 
     var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            connections
+            if eos.status == .connected {
+                ActiveCuesPanel()
+                    .frame(width: activeCueX == nil ? Self.activeCueWidth : nil)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var connections: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeading("CONNECTIONS")
                 .padding(.horizontal, Layout.edge)
@@ -177,7 +211,75 @@ struct ConnectionsHeader: View {
             }
         }
         .padding(.bottom, Layout.sectionBottom)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: connectionsWidth, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// nil (fill the window) without the Active Eos Cues panel. With it, ends where the panel starts.
+    private var connectionsWidth: CGFloat? {
+        guard eos.status == .connected, let activeCueX else { return nil }
+        return max(activeCueX, 0)
+    }
+}
+
+/// The active cue in the main and video cuelists, to the right of the connections, in a green
+/// box (heading included) styled like the QLab and Eos panels in the cue list.
+private struct ActiveCuesPanel: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var eos: EosClient
+
+    var body: some View {
+        // Clicking anywhere on the box opens the floating Active Eos Cues window.
+        Button {
+            ActiveCuesWindowController.shared.show(model: model)
+        } label: {
+            box
+        }
+        .buttonStyle(.plain)
+        .help("Click to show the active cues in a floating window")
+        .padding(.horizontal, Layout.edge)
+        .padding(.vertical, Self.boxInset)
+    }
+
+    private var box: some View {
+        VStack(spacing: 0) {
+            // The box starts `boxInset` down, so this keeps the heading level with CONNECTIONS.
+            SectionHeading("ACTIVE EOS CUES", top: Layout.headingTop - Self.boxInset)
+            VStack(alignment: .leading, spacing: Layout.tight) {
+                ActiveCueLine(label: "Main Cuelist:", value: ActiveCues.mainCueText(eos: eos))
+                    .help("The cue Eos is currently playing back in the main cuelist, set in Settings")
+                ActiveCueLine(label: "Video Cuelist:", value: ActiveCues.videoCueText(settings: settings, eos: eos))
+                    .help("The cue Eos is currently playing back in the video cuelist being synced")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, Layout.rowGap)
+        // Fills the panel, however tall the connections beside it are.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .activeCuesBox()
+    }
+
+    /// Space above and below the box, inside the panel.
+    private static let boxInset = Layout.rowGap
+}
+
+/// "Main Cuelist: 1/5 - Lights up 3.0", with "None" when no cue is active.
+private struct ActiveCueLine: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        // Larger than the rest of the window, since these are what the operator watches.
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(label).foregroundStyle(.secondary)
+            Text(value.isEmpty ? "None" : value)
+                .font(.system(.title2, design: .monospaced).weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .font(.title3)
     }
 }
 
@@ -260,39 +362,6 @@ struct EosConnectionColumn: View {
         case .notConfigured(let reason): return reason
         case .disconnected: return "Not Connected"
         case .error(let reason): return reason
-        }
-    }
-}
-
-/// The Eos active cue, in a box in the window toolbar.
-struct ActiveCueBox: View {
-    @EnvironmentObject private var eos: EosClient
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Text("Active Eos Cue (Main Cuelist):")
-                .foregroundStyle(.secondary)
-            Text(eos.activeCueText.isEmpty ? "None" : eos.activeCueText)
-                .font(.system(.body, design: .monospaced))
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.35)))
-        .help("The cue Eos is currently playing back in the main cuelist, set in Settings")
-    }
-}
-
-extension ToolbarContent {
-    /// The box draws its own background, so don't also put it in the toolbar's shared
-    /// glass background (macOS 26 and later).
-    @ToolbarContentBuilder
-    func hidingSharedBackground() -> some ToolbarContent {
-        if #available(macOS 26.0, *) {
-            sharedBackgroundVisibility(.hidden)
-        } else {
-            self
         }
     }
 }
@@ -397,6 +466,49 @@ struct EosStatusLabel: View {
         case .notConfigured(let reason): return "Eos: \(reason)"
         case .disconnected: return "Eos: Not Connected"
         case .error(let reason): return "Eos: \(reason)"
+        }
+    }
+}
+
+/// Saves the window's size and position as it changes, and restores them when the window opens,
+/// including when the main window is reopened after being closed. (SwiftUI's windows don't
+/// save their frame under an autosave name, so this stores it in UserDefaults directly.)
+private struct RemembersWindowFrame: NSViewRepresentable {
+    let name: String
+
+    func makeNSView(context: Context) -> NSView { FrameView(key: "WindowFrame.\(name)") }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    private final class FrameView: NSView {
+        let key: String
+        private var observers: [NSObjectProtocol] = []
+
+        init(key: String) {
+            self.key = key
+            super.init(frame: .zero)
+        }
+
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+        deinit {
+            observers.forEach(NotificationCenter.default.removeObserver)
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard observers.isEmpty, let window else { return }
+            // Wait a turn so this runs after SwiftUI has given the window its default frame.
+            DispatchQueue.main.async { [key] in
+                if let saved = UserDefaults.standard.string(forKey: key) {
+                    window.setFrame(from: saved)
+                }
+                let save: (Notification) -> Void = { notification in
+                    guard let window = notification.object as? NSWindow else { return }
+                    UserDefaults.standard.set(window.frameDescriptor, forKey: key)
+                }
+                self.observers = [NSWindow.didMoveNotification, NSWindow.didResizeNotification, NSWindow.willCloseNotification]
+                    .map { NotificationCenter.default.addObserver(forName: $0, object: window, queue: .main, using: save) }
+            }
         }
     }
 }

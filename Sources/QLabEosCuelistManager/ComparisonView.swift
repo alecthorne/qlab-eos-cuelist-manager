@@ -39,6 +39,10 @@ struct ComparisonPane: View {
 
                 ApprovalPanel(changes: model.plannedChanges ?? [])
                     .frame(minWidth: 300, idealWidth: 360, maxWidth: 480)
+                    .background(GeometryReader { geometry in
+                        Color.clear.preference(key: ApprovalPanelXKey.self,
+                                               value: geometry.frame(in: .named(EosPanelXKey.coordinateSpace)).minX)
+                    })
             }
         }
     }
