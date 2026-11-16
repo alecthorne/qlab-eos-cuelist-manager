@@ -1,9 +1,11 @@
 # QLab → Eos CueSync
 
 QLab → Eos CueSync keeps one ETC Eos cue list in step with the numbered cues in a QLab cue list.
-It's built for the common setup where Eos fires QLab cues with matching numbers: whenever you add,
-renumber or rename cues in QLab, the app shows you exactly what's different on the console and
-fixes it for you, one approved change at a time.
+It's built for the common setup where Eos fires QLab cues with matching numbers from a secondary
+video cuelist that is itself triggered from the main Eos cuelist using OOS Sync (Out-of-Sequence 
+Sync): whenever you add, renumber or rename cues in QLab, the app shows you exactly what's 
+different on the console's secondary video cuelist and fixes it for you, one approved change at 
+a time.
 
 **QLab is always the source of truth.** The app only ever changes Eos, and it never changes
 anything on the console until you approve it.
@@ -132,14 +134,18 @@ it. The app asks first: **Create a new Eos cue list?**
 
 ### Good to know before using it on a show
 
-- **New cues are created blank** with Record Only, which stores only manual data. With nothing
-  manual on stage, the new cue is empty. Clear any manual data before adding cues, or check the
-  new cues afterwards.
+- **DO NOT USE TO UPDATE A CUELIST THAT STORES ANY OTHER DATA** - The "Record Only" command used
+  to add cues avoids recording any channel levels into the cues, and deletions may erase cue data
+  inadvertently. This app is ONLY intended to update a separate video cuelist that is not used to
+  store lighting data.
 - **Commands are sent as Eos user 61** (unless you change it), so the app doesn't type on the
-  operator's command line.
-- **Labels are sent as text, not typed**, so any characters in a QLab cue name are safe.
+  operator's command line. Though it is possible, it is **not recommended** to use the Console user
+  or a user number shared by any other device.
+- **Labels are sent as text, not typed**, so any special characters in a QLab cue name are safe.
 - **Deletes are permanent.** Delete cards are red, and Approve All lists how many deletes it will
   send before you confirm.
+- **Recommended Eos Settings** - Consider using a channel filter on the video cuelist so it can't
+  record lighting data, especially if you are not using a unique user number.
 
 ## Exporting a cue list
 
